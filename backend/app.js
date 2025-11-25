@@ -1,7 +1,12 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config();
+
+app.use(cors({
+    origin: 'http://localhost:5173' // Only allow your frontend
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
