@@ -7,7 +7,8 @@ function Signup() {
     // 1. State for form data
     const [formData, setFormData] = useState({
         email: '',
-        password: ''
+        password: '',
+        name: '' // Added name field
     });
 
     const navigate = useNavigate();
@@ -31,6 +32,7 @@ function Signup() {
 
         try {
             // Make API call to your backend
+            // Note: Ensure your backend is running on port 1234
             const response = await axios.post('http://localhost:1234/api/auth/register', formData);
 
             toast.dismiss(loadingToast);
@@ -48,80 +50,85 @@ function Signup() {
         }
     };
 
-    // --- Styles ab hum CSS variables se lenge ---
+    // --- STYLES (Dark Theme - No Labels) ---
     const containerStyle = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        // Background color ab body se aayega, yahan hataya
+        padding: '1rem'
     };
 
     const formBoxStyle = {
         width: '100%',
         maxWidth: '400px',
-        // 'card' class baaki styles sambhal legi (bg color, border, padding)
     };
+
+    // labelStyle हटा दिया गया है
 
     const inputStyle = {
         width: '100%',
-        padding: '10px',
+        padding: '12px',
         borderRadius: 'var(--border-radius)',
-        border: '1px solid var(--color-border)', // Dark subtle border
-        backgroundColor: 'var(--color-bg-main)', // Dark input background
-        color: 'var(--color-text-main)', // Light text
+        border: '1px solid var(--color-border)',
+        backgroundColor: 'var(--color-bg-main)',
+        color: 'var(--color-text-main)',
         boxSizing: 'border-box',
-        marginBottom: '15px'
-    };
-
-    const labelStyle = {
-        display: 'block',
-        marginBottom: '5px',
-        fontWeight: 'bold',
-        color: 'var(--color-text-main)' // Light text for label
+        // marginBottom हटा दिया, अब कंटेनर div स्पेसिंग संभालेगा
     };
 
     return (
         <div className="auth-container" style={containerStyle}>
-            {/* 'card' class use ki taaki dark theme wala card style apply ho */}
             <div className="card" style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Developer Signup</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem' }}>Developer Signup</h2>
                 <form onSubmit={handleSubmit}>
+                    {/* Name Input - No Label */}
                     <div style={{ marginBottom: '15px' }}>
-                        <label style={labelStyle}>Email</label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            style={inputStyle}
+                            placeholder="Full Name (Optional)" // प्लेसहोल्डर अपडेट किया
+                        />
+                    </div>
+
+                    {/* Email Input - No Label */}
+                    <div style={{ marginBottom: '15px' }}>
                         <input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
                             style={inputStyle}
-                            placeholder="Enter your email"
+                            placeholder="Email Address" // प्लेसहोल्डर अपडेट किया
                             required
                         />
                     </div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={labelStyle}>Password</label>
+
+                    {/* Password Input - No Label */}
+                    <div style={{ marginBottom: '25px' }}>
                         <input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
                             style={inputStyle}
-                            placeholder="Enter your password"
+                            placeholder="Password (min 6 chars)" // प्लेसहोल्डर अपडेट किया
                             required
+                            minLength={6}
                         />
                     </div>
-                    {/* 'btn btn-primary' class use ki taaki green button bane */}
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Sign Up</button>
+
+                    <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>Sign Up</button>
                 </form>
-                <p style={{ marginTop: '15px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)' }}>Login</Link>
+                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Login</Link>
                 </p>
             </div>
         </div>
     );
 }
-
-// Purana 'styles' object hata diya hai kyunki ab hum variables use kar rahe hain.
 
 export default Signup;

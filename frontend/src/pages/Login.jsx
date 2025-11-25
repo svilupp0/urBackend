@@ -2,12 +2,11 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,80 +19,99 @@ function Login() {
             return;
         }
 
+        setIsLoading(true);
         const loadingToast = toast.loading('Logging in...');
 
         try {
+            // Make API call to backend login endpoint
+            // Note: Ensure your backend is running on port 1234
             const response = await axios.post('http://localhost:1234/api/auth/login', formData);
+
+            // Extract token from response
             const { token } = response.data;
+            console.log("Login Success! Token:", token);
 
-            // Placeholder user data until we have a profile API endpoint for devs
-            login({ email: formData.email }, token);
-
+            // --- TEMPORARY: Day 8 में हम इसे Auth Context में डालेंगे ---
             toast.dismiss(loadingToast);
             toast.success("Welcome back!");
 
+            // Redirect to Dashboard
             navigate('/dashboard');
 
         } catch (err) {
             toast.dismiss(loadingToast);
-            const errorMessage = err.response?.data || 'Login failed. Please check credentials.';
+            const errorMessage = err.response?.data || 'Login failed. Check your credentials.';
             toast.error(errorMessage);
+            setIsLoading(false);
         }
     };
 
-    // --- Styles updated for Dark Theme ---
+    // --- STYLES (Dark Theme) ---
     const containerStyle = {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
-        // Background handles by global body style
+        padding: '1rem'
     };
 
-    const formBoxStyle = {
-        width: '100%',
-        maxWidth: '400px',
-        // 'card' class handles bg, border, padding
-    };
+    const formBoxStyle = { width: '100%', maxWidth: '400px' };
+
+    // labelStyle हटा दिया गया है क्योंकि अब इसकी जरूरत नहीं है
 
     const inputStyle = {
         width: '100%',
-        padding: '10px',
+        padding: '12px',
         borderRadius: 'var(--border-radius)',
         border: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-bg-main)', // Dark bg
-        color: 'var(--color-text-main)', // Light text
+        backgroundColor: 'var(--color-bg-main)',
+        color: 'var(--color-text-main)',
         boxSizing: 'border-box',
-        marginBottom: '15px'
+        // marginBottom यहाँ से हटाकर कंटेनर div में रखा है ताकि स्पेसिंग सही रहे
     };
 
     return (
         <div style={containerStyle}>
-            {/* Added 'card' class */}
             <div className="card" style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>Developer Login</h2>
+                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem' }}>
+                    Developer Login
+                </h2>
                 <form onSubmit={handleSubmit}>
-                    <input
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        onChange={handleChange}
-                        style={inputStyle}
-                        required
-                    />
-                    <input
-                        type="password"
-                        name="password"
-                        placeholder="Password"
-                        onChange={handleChange}
-                        style={inputStyle}
-                        required
-                    />
-                    {/* Added 'btn btn-primary' classes */}
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>Login</button>
+                    <div style={{ marginBottom: '20px' }}>
+                        {/* Label हटा दिया गया */}
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Email Address"  // प्लेसहोल्डर को थोड़ा अपडेट किया
+                            onChange={handleChange}
+                            style={inputStyle}
+                            required
+                        />
+                    </div>
+                    <div style={{ marginBottom: '25px' }}>
+                        {/* Label हटा दिया गया */}
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Password" // प्लेसहोल्डर को थोड़ा अपडेट किया
+                            onChange={handleChange}
+                            style={inputStyle}
+                            required
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Logging In...' : 'Log In'}
+                    </button>
                 </form>
-                <p style={{ marginTop: '15px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    Don't have an account? <Link to="/signup" style={{ color: 'var(--color-primary)' }}>Sign up</Link>
+                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    Don't have an account? <Link to="/signup" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Sign up</Link>
                 </p>
             </div>
         </div>
