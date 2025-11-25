@@ -56,4 +56,31 @@ router.post('/collection', authMiddleware, async (req, res) => {
     }
 });
 
+
+// GET Single Project Details (Includes Collections & Schema)
+// Example: GET /api/projects/6922eba503a21dbe72dd7934
+// Yeh dashboard par "Project Details Page" load karne ke kaam aayega.
+router.get('/:projectId', authMiddleware, async (req, res) => {
+    try {
+        // 1. Project ID aur Owner ID dono match hone chahiye (Security)
+        // Taaki Developer A kisi aur ka project na dekh sake.
+        const project = await Project.findOne({
+            _id: req.params.projectId,
+            owner: req.user._id
+        });
+
+        if (!project) {
+            return res.status(404).send("Project not found or access denied.");
+        }
+
+        // 2. Poora project object bhej do (ismein collections array bhi hoga)
+        res.json(project);
+
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+
+
 module.exports = router;

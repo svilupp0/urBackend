@@ -26,6 +26,7 @@ const authRoute = require('./routes/auth');
 const projectRoute = require('./routes/projects');
 const dataRoute = require('./routes/data');
 const userAuthRoute = require('./routes/userAuth');
+const storageRoute = require('./routes/storage');
 
 
 // Using routes 
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoute);
 app.use('/api/projects', projectRoute);
 app.use('/api/data', dataRoute);
 app.use('/api/userAuth', userAuthRoute);
+app.use('/api/storage', storageRoute);
 
 app.listen(1234, () => {
     console.log("http://localhost:1234");
