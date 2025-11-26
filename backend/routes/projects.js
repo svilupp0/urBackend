@@ -4,28 +4,29 @@ const Project = require('../models/Project');
 const authMiddleware = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
 
+// 1. CREATE PROJECT (Returns API Key ONCE)
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        console.log(req.body);
         const { name, description } = req.body;
         const newProject = new Project({
             name,
             description,
             owner: req.user._id,
-            apiKey: uuidv4(),      // API Key (Public access ke liye)
-            jwtSecret: uuidv4()    // NEW: Secret Key (Tokens sign karne ke liye)
+            apiKey: uuidv4(),
+            jwtSecret: uuidv4()
         });
         await newProject.save();
-        res.status(201).send(newProject);
+        res.status(201).send(newProject); // Yahan key wapis jayegi (sirf creation par)
     } catch (err) {
         res.status(500).send(err.message);
     }
 })
 
+// 2. GET ALL PROJECTS (Hide Keys)
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const projects = await Project.find({ owner: req.user._id });
-        console.log(projects)
+        // .select('-apiKey -jwtSecret') sensitive data hata dega
+        const projects = await Project.find({ owner: req.user._id }).select('-apiKey -jwtSecret');
         res.status(200).send(projects);
     }
     catch (err) {
@@ -33,7 +34,44 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 })
 
-// POST /api/projects/collection
+// 3. GET SINGLE PROJECT (Hide Keys)
+router.get('/:projectId', authMiddleware, async (req, res) => {
+    try {
+        const project = await Project.findOne({
+            _id: req.params.projectId,
+            owner: req.user._id
+        }).select('-apiKey -jwtSecret'); // KEY EXCLUDED HERE
+
+        if (!project) return res.status(404).send("Project not found.");
+
+        res.json(project);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// 4. REGENERATE API KEY (New Route)
+router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
+    try {
+        const newApiKey = uuidv4();
+
+        const project = await Project.findOneAndUpdate(
+            { _id: req.params.projectId, owner: req.user._id },
+            { $set: { apiKey: newApiKey } },
+            { new: true } // Return updated doc
+        );
+
+        if (!project) return res.status(404).send("Project not found.");
+
+        // Sirf naya key bhejo
+        res.json({ apiKey: project.apiKey });
+
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+// 5. CREATE COLLECTION
 router.post('/collection', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName, schema } = req.body;
@@ -50,37 +88,14 @@ router.post('/collection', authMiddleware, async (req, res) => {
         });
 
         await project.save();
+        // Return project but hide keys again just in case
+        project.apiKey = undefined;
+        project.jwtSecret = undefined;
+
         res.status(201).send(project);
     } catch (err) {
         res.status(500).send(err.message);
     }
 });
-
-
-// GET Single Project Details (Includes Collections & Schema)
-// Example: GET /api/projects/6922eba503a21dbe72dd7934
-// Yeh dashboard par "Project Details Page" load karne ke kaam aayega.
-router.get('/:projectId', authMiddleware, async (req, res) => {
-    try {
-        // 1. Project ID aur Owner ID dono match hone chahiye (Security)
-        // Taaki Developer A kisi aur ka project na dekh sake.
-        const project = await Project.findOne({
-            _id: req.params.projectId,
-            owner: req.user._id
-        });
-
-        if (!project) {
-            return res.status(404).send("Project not found or access denied.");
-        }
-
-        // 2. Poora project object bhej do (ismein collections array bhi hoga)
-        res.json(project);
-
-    } catch (err) {
-        res.status(500).send(err.message);
-    }
-});
-
-
 
 module.exports = router;
