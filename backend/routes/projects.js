@@ -214,22 +214,36 @@ router.delete('/:projectId', authMiddleware, async (req, res) => {
                 await mongoose.connection.db.dropCollection(collectionName);
                 console.log(`Dropped collection: ${collectionName}`);
             } catch (e) {
-                // Agar collection exist nahi karta to error ignore karo
-                console.log(`Collection ${collectionName} not found or already deleted.`);
+                // Ignore if collection doesn't exist
             }
         }
 
-        // 3. Delete 'users' collection (User Auth wala)
+        // 3. Delete 'users' collection
         try {
             await mongoose.connection.db.dropCollection(`${project._id}_users`);
         } catch (e) { }
 
-        // 4. Delete Storage Files (Supabase)
-        // Pehle list karo fir delete karo (Supabase folder delete directly support nahi karta)
-        const { data: files } = await supabase.storage.from('dev-files').list(`${projectId}`);
-        if (files && files.length > 0) {
-            const pathsToRemove = files.map(f => `${projectId}/${f.name}`);
-            await supabase.storage.from('dev-files').remove(pathsToRemove);
+        // 4. Delete Storage Files (Supabase Loop Fix)
+        // Loop chalayenge jab tak folder khali na ho jaye
+        let hasMoreFiles = true;
+        while (hasMoreFiles) {
+            const { data: files, error } = await supabase.storage
+                .from('dev-files')
+                .list(`${projectId}`, { limit: 100 }); // Default limit 100 hoti hai
+
+            if (error) throw error;
+
+            if (files && files.length > 0) {
+                const pathsToRemove = files.map(f => `${projectId}/${f.name}`);
+                const { error: removeError } = await supabase.storage
+                    .from('dev-files')
+                    .remove(pathsToRemove);
+
+                if (removeError) throw removeError;
+                console.log(`Deleted batch of ${files.length} files`);
+            } else {
+                hasMoreFiles = false; // Files khatam
+            }
         }
 
         // 5. Delete Project Document

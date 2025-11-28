@@ -66,6 +66,26 @@ console.log(data);
                 return (
                     <div>
                         <h2 className="page-title" style={{ marginBottom: '1rem' }}>Introduction</h2>
+
+                        {/* 🚨 SECURITY WARNING ADDED HERE */}
+                        <div className="card" style={{
+                            borderLeft: '4px solid var(--color-danger)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            marginBottom: '2rem',
+                            padding: '1rem'
+                        }}>
+                            <h3 style={{ color: 'var(--color-danger)', fontSize: '1.1rem', marginTop: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Shield size={18} /> Security Warning
+                            </h3>
+                            <p style={{ fontSize: '0.9rem', marginBottom: 0, color: 'var(--color-text-main)' }}>
+                                Your <strong>x-api-key</strong> grants <strong>Admin Access</strong> (Read/Write/Delete).
+                                <br /><br />
+                                ❌ <strong>NEVER</strong> use this key in client-side code (React, Vue, Mobile Apps).
+                                <br />
+                                ✅ <strong>ONLY</strong> use this key in secure server-side environments (Node.js, Python, PHP, etc.).
+                            </p>
+                        </div>
+
                         <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
                             Welcome to the urBackend API documentation. You can use this API to manage users, store data, and upload files for your applications.
                         </p>
