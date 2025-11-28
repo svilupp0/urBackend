@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext'; // 1. Import Auth Hook
 import {
     LayoutDashboard,
     Database,
@@ -7,12 +8,14 @@ import {
     Settings,
     ArrowLeft,
     FileText,
-    UserCog // New icon for Account Settings
+    UserCog,
+    LogOut // 2. Import Logout Icon
 } from 'lucide-react';
 
 function Sidebar({ logo }) {
     const location = useLocation();
     const { projectId } = useParams();
+    const { logout } = useAuth(); // 3. Get logout function
 
     const isActive = (path) => location.pathname === path;
 
@@ -26,12 +29,13 @@ function Sidebar({ logo }) {
                     </Link>
                 ) : (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <img src={logo} alt="Logo" style={{ height: '30px' }} />
+                        <img src={logo} alt="Logo" style={{ height: '24px' }} />
                         <span className="sidebar-logo-text">urBackend</span>
                     </div>
                 )}
             </div>
 
+            {/* Navigation Links */}
             <nav className="sidebar-nav">
                 {projectId ? (
                     <>
@@ -57,7 +61,6 @@ function Sidebar({ logo }) {
                             <span>Storage</span>
                         </Link>
 
-                        {/* Project Settings Link */}
                         <Link to={`/project/${projectId}/settings`} className={`nav-item ${isActive(`/project/${projectId}/settings`) ? 'active' : ''}`}>
                             <Settings size={18} />
                             <span>Settings</span>
@@ -75,7 +78,6 @@ function Sidebar({ logo }) {
                             <span>Documentation</span>
                         </Link>
 
-                        {/* Account Settings Link Added Here */}
                         <Link to="/settings" className={`nav-item ${isActive('/settings') ? 'active' : ''}`}>
                             <UserCog size={18} />
                             <span>Account Settings</span>
@@ -83,6 +85,25 @@ function Sidebar({ logo }) {
                     </>
                 )}
             </nav>
+
+            {/* 4. Logout Footer (Fixed at bottom) */}
+            <div style={{ padding: '1rem', borderTop: '1px solid var(--color-border)' }}>
+                <button
+                    onClick={logout}
+                    className="nav-item"
+                    style={{
+                        width: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--color-danger)', // Red color for attention
+                        justifyContent: 'flex-start'
+                    }}
+                >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                </button>
+            </div>
         </aside>
     );
 }

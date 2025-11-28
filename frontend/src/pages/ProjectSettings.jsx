@@ -11,9 +11,14 @@ export default function ProjectSettings() {
     const { token } = useAuth();
     const navigate = useNavigate();
 
+    // Existing State
     const [project, setProject] = useState(null);
     const [loading, setLoading] = useState(true);
     const [deleteConfirm, setDeleteConfirm] = useState('');
+
+    // --- NEW STATE FOR RENAME ---
+    const [newName, setNewName] = useState('');
+    const [renaming, setRenaming] = useState(false);
 
     useEffect(() => {
         const fetchProject = async () => {
@@ -22,6 +27,8 @@ export default function ProjectSettings() {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProject(res.data);
+                // Set initial name for renaming
+                setNewName(res.data.name);
             } catch (err) {
                 toast.error("Failed to load project");
             } finally {
@@ -30,6 +37,26 @@ export default function ProjectSettings() {
         };
         fetchProject();
     }, [projectId, token]);
+
+    // --- NEW: HANDLE RENAME ---
+    const handleRename = async () => {
+        if (!newName.trim()) return toast.error("Project name cannot be empty");
+
+        setRenaming(true);
+        try {
+            await axios.patch(`${API_URL}/api/projects/${projectId}`,
+                { name: newName },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Project renamed successfully!");
+            // Update local state to reflect change immediately
+            setProject(prev => ({ ...prev, name: newName }));
+        } catch (err) {
+            toast.error("Failed to rename project");
+        } finally {
+            setRenaming(false);
+        }
+    }
 
     const handleDeleteProject = async () => {
         if (deleteConfirm !== project.name) return toast.error("Project name does not match");
@@ -58,13 +85,26 @@ export default function ProjectSettings() {
                 </div>
             </div>
 
-            {/* General Settings (Placeholder for now) */}
+            {/* General Settings (Rename Feature) */}
             <div className="card" style={{ marginBottom: '2rem' }}>
                 <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', fontWeight: 600 }}>General</h3>
-                <div className="form-group">
-                    <label className="form-label">Project Name</label>
-                    <input type="text" className="input-field" defaultValue={project?.name} disabled />
-                    <small style={{ color: 'var(--color-text-muted)' }}>Rename feature coming soon.</small>
+                <div className="form-group" style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                        <label className="form-label">Project Name</label>
+                        <input
+                            type="text"
+                            className="input-field"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        onClick={handleRename}
+                        className="btn btn-primary"
+                        disabled={renaming || newName === project?.name}
+                    >
+                        {renaming ? 'Saving...' : 'Save'}
+                    </button>
                 </div>
             </div>
 

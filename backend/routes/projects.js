@@ -255,4 +255,48 @@ router.delete('/:projectId', authMiddleware, async (req, res) => {
         res.status(500).send(err.message);
     }
 });
+
+
+
+router.patch('/:projectId', authMiddleware, async (req, res) => {
+    try {
+        const { name } = req.body;
+        const project = await Project.findOneAndUpdate(
+            { _id: req.params.projectId, owner: req.user._id },
+            { $set: { name } }, // Sirf naam update kar rahe hain abhi
+            { new: true }
+        );
+        if (!project) return res.status(404).send("Project not found.");
+        res.json(project);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+
+
+router.post('/:projectId/collections/:collectionName/data', authMiddleware, async (req, res) => {
+    try {
+        const { projectId, collectionName } = req.params;
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).send("Project not found.");
+
+        const finalCollectionName = `${project._id}_${collectionName}`;
+        const incomingData = req.body;
+
+        // Note: Yahan aap chahein to schema validation (jo data.js me kiya tha) duplicate kar sakte hain safety ke liye.
+        // Abhi ke liye direct insert kar rahe hain MVP ke liye.
+
+        const result = await mongoose.connection.db
+            .collection(finalCollectionName)
+            .insertOne(incomingData);
+
+        res.json(result);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}); 
+
+
+
 module.exports = router;
