@@ -1,34 +1,22 @@
 import Sidebar from './Sidebar';
-import Header from './Header';
-
-const styles = {
-    wrapper: {
-        display: 'flex',
-        minHeight: '100vh'
-    },
-    contentArea: {
-        flex: 1, // Bachi hui saari jagah lelo
-        marginLeft: 'var(--sidebar-width)', // Sidebar ke liye jagah chhodo
-        marginTop: 'var(--header-height)', // Header ke liye jagah chhodo
-        padding: '2rem',
-        backgroundColor: 'var(--color-bg-inset)',
-        minHeight: 'calc(100vh - var(--header-height))',
-        boxSizing: 'border-box'
-    }
-};
-
+import Header from './Header'; // Purana Header use kar rahe hain top bar ke liye
 import logoImage from '../../assets/logo_u.png';
 
-
-// 'children' prop ka matlab hai jo bhi component iske andar pass kiya jayega
 function MainLayout({ children }) {
     return (
-        <div style={styles.wrapper}>
+        <div className="app-shell">
             <Sidebar logo={logoImage} />
-            <Header logo={logoImage} />
-            <main style={styles.contentArea}>
-                {children} {/* Yahan par Dashboard/Projects page load hoga */}
-            </main>
+
+            {/* Main Content Area */}
+            <div className="main-content">
+                {/* Fixed Header at Top Right (User Profile etc.) */}
+                <Header logo={logoImage} />
+
+                {/* Dynamic Page Content */}
+                <div className="content-wrapper">
+                    {children}
+                </div>
+            </div>
         </div>
     );
 }

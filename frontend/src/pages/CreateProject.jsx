@@ -9,8 +9,6 @@ function CreateProject() {
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [loading, setLoading] = useState(false);
-
-    // Nayi State: Jab project ban jayega, tab uska data yahan store hoga
     const [newProject, setNewProject] = useState(null);
 
     const { token } = useAuth();
@@ -26,11 +24,8 @@ function CreateProject() {
                 { name, description },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
-            // Success par navigate karne ki jagah, naya data save kar lo
             setNewProject(res.data);
             toast.success("Project Created!");
-
         } catch (err) {
             toast.error(err.response?.data || "Failed to create project");
         } finally {
@@ -43,47 +38,44 @@ function CreateProject() {
         toast.success("Copied to clipboard!");
     };
 
-    // Agar project ban chuka hai, toh yeh "Success View" dikhao
+    // --- SUCCESS VIEW (API KEY) ---
     if (newProject) {
         return (
-            <div style={{ maxWidth: '600px', margin: '2rem auto' }}>
+            <div className="container" style={{ maxWidth: '600px', marginTop: '4rem' }}>
                 <div className="card" style={{ border: '1px solid var(--color-success)', background: 'rgba(62, 207, 142, 0.05)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                        <CheckCircle size={48} color="var(--color-success)" style={{ marginBottom: '10px' }} />
-                        <h2 style={{ fontSize: '1.8rem' }}>Project Created Successfully!</h2>
+                    <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                        <CheckCircle size={64} color="var(--color-success)" style={{ marginBottom: '1rem', opacity: 0.9 }} />
+                        <h2 style={{ fontSize: '1.8rem', fontWeight: 700 }}>Project Created!</h2>
+                        <p style={{ color: 'var(--color-text-muted)' }}>{newProject.name} is ready to use.</p>
                     </div>
 
-                    <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--color-error)', borderRadius: '6px', padding: '1rem', marginBottom: '1.5rem', display: 'flex', gap: '10px' }}>
-                        <AlertTriangle color="var(--color-error)" size={24} style={{ flexShrink: 0 }} />
+                    <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--color-danger)', borderRadius: '6px', padding: '1rem', marginBottom: '2rem', display: 'flex', gap: '12px' }}>
+                        <AlertTriangle color="var(--color-danger)" size={24} style={{ flexShrink: 0, marginTop: '2px' }} />
                         <div>
-                            <strong style={{ color: 'var(--color-error)' }}>Important:</strong>
+                            <strong style={{ color: 'var(--color-danger)' }}>Save this API Key immediately</strong>
                             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-                                This API Key will <strong>only be shown once</strong>. Please copy it and store it securely. You won't be able to see it again!
+                                For security, we only show this key once. If you lose it, you will need to regenerate it, which may break your app.
                             </p>
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '2rem' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-muted)' }}>Your API Key</label>
+                    <div className="form-group">
+                        <label className="form-label">Anon Public Key</label>
                         <div style={{ display: 'flex', gap: '10px' }}>
-                            <code style={{
-                                flex: 1,
-                                padding: '12px',
-                                background: '#111',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: 'var(--border-radius)',
+                            <code className="input-field" style={{
                                 fontFamily: 'monospace',
+                                backgroundColor: '#111',
                                 color: 'var(--color-primary)',
-                                overflowX: 'auto'
+                                overflowX: 'auto',
+                                whiteSpace: 'nowrap'
                             }}>
                                 {newProject.apiKey}
                             </code>
                             <button
                                 onClick={() => copyToClipboard(newProject.apiKey)}
-                                className="btn"
-                                style={{ border: '1px solid var(--color-border)' }}
+                                className="btn btn-secondary"
                             >
-                                <Copy size={20} />
+                                <Copy size={18} />
                             </button>
                         </div>
                     </div>
@@ -91,67 +83,61 @@ function CreateProject() {
                     <button
                         onClick={() => navigate('/dashboard')}
                         className="btn btn-primary"
-                        style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
+                        style={{ width: '100%', padding: '12px', justifyContent: 'center' }}
                     >
-                        I have copied it, Go to Dashboard
+                        I have saved the key, Go to Dashboard
                     </button>
                 </div>
             </div>
         );
     }
 
-    // Normal "Create Form" View
+    // --- FORM VIEW ---
     return (
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div className="container" style={{ maxWidth: '600px' }}>
             <button
                 onClick={() => navigate('/dashboard')}
-                className="btn"
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '1rem', paddingLeft: 0, color: 'var(--color-text-muted)' }}
+                className="btn btn-ghost"
+                style={{ marginBottom: '1rem', paddingLeft: 0 }}
             >
                 <ArrowLeft size={18} /> Back to Dashboard
             </button>
+
             <div className="card">
-                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Create New Project</h2>
+                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem', fontWeight: 600 }}>Create New Project</h2>
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Project Name</label>
+                    <div className="form-group">
+                        <label className="form-label">Project Name</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            style={{
-                                width: '100%', padding: '12px',
-                                borderRadius: 'var(--border-radius)',
-                                border: '1px solid var(--color-border)',
-                                backgroundColor: 'var(--color-bg-main)',
-                                color: 'var(--color-text-main)',
-                                fontSize: '1rem'
-                            }}
+                            className="input-field"
                             placeholder="e.g. My E-commerce API"
                             autoFocus
                         />
                     </div>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Description (Optional)</label>
+
+                    <div className="form-group">
+                        <label className="form-label">Description (Optional)</label>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            style={{
-                                width: '100%', padding: '12px',
-                                borderRadius: 'var(--border-radius)',
-                                border: '1px solid var(--color-border)',
-                                backgroundColor: 'var(--color-bg-main)',
-                                color: 'var(--color-text-main)',
-                                minHeight: '100px',
-                                fontSize: '1rem',
-                                resize: 'vertical'
-                            }}
+                            className="input-field"
+                            style={{ minHeight: '100px', resize: 'vertical' }}
                             placeholder="What is this project about?"
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', padding: '12px', fontSize: '1rem' }}>
-                        {loading ? 'Creating...' : 'Create Project'}
-                    </button>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+                        <button
+                            type="submit"
+                            className="btn btn-primary"
+                            disabled={loading}
+                        >
+                            {loading ? 'Creating Project...' : 'Create Project'}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

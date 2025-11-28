@@ -2,11 +2,14 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // 1. Import Auth Context
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
+
     const navigate = useNavigate();
+    const { login } = useAuth(); // 2. Get login function
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,15 +26,17 @@ function Login() {
         const loadingToast = toast.loading('Logging in...');
 
         try {
-            // Make API call to backend login endpoint
-            // Note: Ensure your backend is running on port 1234
+            // Note: Ngrok se access karte waqt localhost API shayad issue kare agar device alag ho.
+            // Lekin agar same PC par browser hai to chalega.
             const response = await axios.post('http://localhost:1234/api/auth/login', formData);
 
-            // Extract token from response
             const { token } = response.data;
             console.log("Login Success! Token:", token);
 
-            // --- TEMPORARY: Day 8 में हम इसे Auth Context में डालेंगे ---
+            // 3. Save Token & User via Context
+            // Abhi backend sirf token bhej raha hai, toh hum user data mein email khud se daal dete hain
+            login({ email: formData.email }, token);
+
             toast.dismiss(loadingToast);
             toast.success("Welcome back!");
 
@@ -39,6 +44,7 @@ function Login() {
             navigate('/dashboard');
 
         } catch (err) {
+            console.error(err);
             toast.dismiss(loadingToast);
             const errorMessage = err.response?.data || 'Login failed. Check your credentials.';
             toast.error(errorMessage);
@@ -46,7 +52,7 @@ function Login() {
         }
     };
 
-    // --- STYLES (Dark Theme) ---
+    // --- STYLES ---
     const containerStyle = {
         display: 'flex',
         justifyContent: 'center',
@@ -57,60 +63,45 @@ function Login() {
 
     const formBoxStyle = { width: '100%', maxWidth: '400px' };
 
-    // labelStyle हटा दिया गया है क्योंकि अब इसकी जरूरत नहीं है
-
-    const inputStyle = {
-        width: '100%',
-        padding: '12px',
-        borderRadius: 'var(--border-radius)',
-        border: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-bg-main)',
-        color: 'var(--color-text-main)',
-        boxSizing: 'border-box',
-        // marginBottom यहाँ से हटाकर कंटेनर div में रखा है ताकि स्पेसिंग सही रहे
-    };
-
     return (
         <div style={containerStyle}>
             <div className="card" style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem' }}>
+                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem', fontWeight: 600 }}>
                     Developer Login
                 </h2>
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '20px' }}>
-                        {/* Label हटा दिया गया */}
+                    <div className="form-group">
+                        <label className="form-label">Email</label>
                         <input
                             type="email"
-                            id="email"
                             name="email"
-                            placeholder="Email Address"  // प्लेसहोल्डर को थोड़ा अपडेट किया
+                            className="input-field"
+                            placeholder="Email Address"
                             onChange={handleChange}
-                            style={inputStyle}
                             required
                         />
                     </div>
-                    <div style={{ marginBottom: '25px' }}>
-                        {/* Label हटा दिया गया */}
+                    <div className="form-group">
+                        <label className="form-label">Password</label>
                         <input
                             type="password"
-                            id="password"
                             name="password"
-                            placeholder="Password" // प्लेसहोल्डर को थोड़ा अपडेट किया
+                            className="input-field"
+                            placeholder="Password"
                             onChange={handleChange}
-                            style={inputStyle}
                             required
                         />
                     </div>
                     <button
                         type="submit"
                         className="btn btn-primary"
-                        style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
+                        style={{ width: '100%', marginTop: '10px' }}
                         disabled={isLoading}
                     >
                         {isLoading ? 'Logging In...' : 'Log In'}
                     </button>
                 </form>
-                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
                     Don't have an account? <Link to="/signup" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Sign up</Link>
                 </p>
             </div>
