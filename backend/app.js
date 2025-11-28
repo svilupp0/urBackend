@@ -41,6 +41,7 @@ app.use('/api/data', dataRoute);
 app.use('/api/userAuth', userAuthRoute);
 app.use('/api/storage', storageRoute);
 
-app.listen(1234, () => {
-    console.log("http://localhost:1234");
-})
+const PORT = process.env.PORT || 1234;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
