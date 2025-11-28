@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { UploadCloud, Trash2, File, Image as ImageIcon, ExternalLink, HardDrive } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function Storage() {
     const { projectId } = useParams();
@@ -17,7 +18,7 @@ export default function Storage() {
     // 1. Fetch Files
     const fetchFiles = async () => {
         try {
-            const res = await axios.get(`http://localhost:1234/api/projects/${projectId}/storage/files`, {
+            const res = await axios.get(`${API_URL}/api/projects/${projectId}/storage/files`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFiles(res.data);
@@ -44,7 +45,7 @@ export default function Storage() {
         const toastId = toast.loading("Uploading...");
 
         try {
-            await axios.post(`http://localhost:1234/api/projects/${projectId}/storage/upload`, formData, {
+            await axios.post(`${API_URL}/api/projects/${projectId}/storage/upload`, formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -65,7 +66,7 @@ export default function Storage() {
         if (!confirm("Delete this file permanently?")) return;
 
         try {
-            await axios.post(`http://localhost:1234/api/projects/${projectId}/storage/delete`,
+            await axios.post(`${API_URL}/api/projects/${projectId}/storage/delete`,
                 { path },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

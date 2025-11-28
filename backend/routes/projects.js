@@ -201,20 +201,44 @@ router.post('/:projectId/storage/delete', authMiddleware, async (req, res) => {
 
 router.delete('/:projectId', authMiddleware, async (req, res) => {
     try {
-        const project = await Project.findOneAndDelete({
-            _id: req.params.projectId,
-            owner: req.user._id
-        });
+        const projectId = req.params.projectId;
 
+        // 1. Find Project
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
         if (!project) return res.status(404).send("Project not found or access denied.");
 
-        // Optional: Delete related collections/storage if needed
-        // For now, removing the project reference is enough for MVP
+        // 2. Delete All Collections (Data)
+        for (const col of project.collections) {
+            const collectionName = `${project._id}_${col.name}`;
+            try {
+                await mongoose.connection.db.dropCollection(collectionName);
+                console.log(`Dropped collection: ${collectionName}`);
+            } catch (e) {
+                // Agar collection exist nahi karta to error ignore karo
+                console.log(`Collection ${collectionName} not found or already deleted.`);
+            }
+        }
 
-        res.send({ message: "Project deleted successfully" });
+        // 3. Delete 'users' collection (User Auth wala)
+        try {
+            await mongoose.connection.db.dropCollection(`${project._id}_users`);
+        } catch (e) { }
+
+        // 4. Delete Storage Files (Supabase)
+        // Pehle list karo fir delete karo (Supabase folder delete directly support nahi karta)
+        const { data: files } = await supabase.storage.from('dev-files').list(`${projectId}`);
+        if (files && files.length > 0) {
+            const pathsToRemove = files.map(f => `${projectId}/${f.name}`);
+            await supabase.storage.from('dev-files').remove(pathsToRemove);
+        }
+
+        // 5. Delete Project Document
+        await Project.deleteOne({ _id: projectId });
+
+        res.send({ message: "Project and all associated resources deleted successfully" });
     } catch (err) {
+        console.error(err);
         res.status(500).send(err.message);
     }
 });
-
 module.exports = router;

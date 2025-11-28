@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 function CreateCollection() {
     const { projectId } = useParams();
@@ -38,7 +40,7 @@ function CreateCollection() {
 
         setLoading(true);
         try {
-            await axios.post('http://localhost:1234/api/projects/collection', {
+            await axios.post(`${API_URL}/api/projects/collection`, {
                 projectId,
                 collectionName: name,
                 schema: fields

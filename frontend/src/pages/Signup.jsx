@@ -2,6 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
+import { API_URL } from '../config';
 
 function Signup() {
     // 1. State for form data
@@ -33,7 +34,7 @@ function Signup() {
         try {
             // Make API call to your backend
             // Note: Ensure your backend is running on port 1234
-            const response = await axios.post('http://localhost:1234/api/auth/register', formData);
+            const response = await axios.post(`${API_URL}/api/auth/register`, formData);
 
             toast.dismiss(loadingToast);
             toast.success(response.data); // "Registered successfully"

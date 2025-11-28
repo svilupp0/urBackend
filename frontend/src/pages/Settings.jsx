@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Lock, Trash2, AlertTriangle, Save } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function Settings() {
     const { token, logout } = useAuth();
@@ -20,7 +21,7 @@ export default function Settings() {
         e.preventDefault();
         setLoadingPass(true);
         try {
-            await axios.put('http://localhost:1234/api/auth/change-password', passData, {
+            await axios.put(`${API_URL}/api/auth/change-password`, passData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Password updated!");
@@ -39,7 +40,7 @@ export default function Settings() {
         setLoadingDelete(true);
         try {
             // DELETE requests mein body bhejne ke liye 'data' key use karni padti hai
-            await axios.delete('http://localhost:1234/api/auth/delete-account', {
+            await axios.delete(`${API_URL}/api/auth/delete-account`, {
                 headers: { Authorization: `Bearer ${token}` },
                 data: { password: deletePass }
             });

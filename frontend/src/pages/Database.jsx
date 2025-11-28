@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Trash2, Plus, Database as DbIcon, RefreshCw, Layers } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 export default function Database() {
     const { projectId } = useParams();
@@ -20,7 +22,7 @@ export default function Database() {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                const res = await axios.get(`http://localhost:1234/api/projects/${projectId}`, {
+                const res = await axios.get(`${API_URL}/api/projects/${projectId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setCollections(res.data.collections);
@@ -44,8 +46,7 @@ export default function Database() {
         const fetchData = async () => {
             setLoadingData(true);
             try {
-                const res = await axios.get(
-                    `http://localhost:1234/api/projects/${projectId}/collections/${activeCollection.name}/data`,
+                const res = await axios.get(`${API_URL}/api/projects/${projectId}/collections/${activeCollection.name}/data`,
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
                 setData(res.data);
@@ -65,7 +66,7 @@ export default function Database() {
 
         try {
             await axios.delete(
-                `http://localhost:1234/api/projects/${projectId}/collections/${activeCollection.name}/data/${id}`,
+                `${API_URL}/api/projects/${projectId}/collections/${activeCollection.name}/data/${id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             // UI se remove karo without refresh

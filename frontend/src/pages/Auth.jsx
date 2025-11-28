@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Shield, Trash2, User, Search, Mail } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 export default function Auth() {
     const { projectId } = useParams();
@@ -16,9 +18,8 @@ export default function Auth() {
     // 1. Fetch Users (We fetch from the 'users' collection internally)
     const fetchUsers = async () => {
         try {
-            // Note: Hum 'users' collection hardcode kar rahe hain
             const res = await axios.get(
-                `http://localhost:1234/api/projects/${projectId}/collections/users/data`,
+                `${API_URL}/api/projects/${projectId}/collections/users/data`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setUsers(res.data);
@@ -40,7 +41,7 @@ export default function Auth() {
 
         try {
             await axios.delete(
-                `http://localhost:1234/api/projects/${projectId}/collections/users/data/${id}`,
+                `${API_URL}/api/projects/${projectId}/collections/users/data/${id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setUsers(users.filter(user => user._id !== id));

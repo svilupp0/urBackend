@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Copy, CheckCircle, AlertTriangle } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 function CreateProject() {
     const [name, setName] = useState('');
@@ -20,7 +22,7 @@ function CreateProject() {
 
         setLoading(true);
         try {
-            const res = await axios.post('http://localhost:1234/api/projects',
+            const res = await axios.post(`${API_URL}/api/projects`,
                 { name, description },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

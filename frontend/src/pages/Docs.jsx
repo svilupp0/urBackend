@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Copy, Terminal, Database, Shield, HardDrive, Check, Server } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 export default function Docs() {
     const [activeTab, setActiveTab] = useState('intro');
@@ -7,7 +9,7 @@ export default function Docs() {
     // Helper Component for Code Blocks
     const CodeBlock = ({ method, url, body, comment }) => {
         const [copied, setCopied] = useState(false);
-        const fullUrl = `https://api.urbackend.bitbros.in${url}`; // Using your chosen domain
+        const fullUrl = `${API_URL}${url}`;
 
         const codeString = `
 // ${comment || 'Example Request'}
@@ -73,7 +75,7 @@ console.log(data);
                                 <Server size={18} /> Base URL
                             </h3>
                             <code className="input-field" style={{ fontFamily: 'monospace', color: 'var(--color-primary)' }}>
-                                https://api.urbackend.bitbros.in
+                                {API_URL}
                             </code>
                             <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
                                 All API requests must include your <code>x-api-key</code> header. You can find this key in your Project Dashboard.

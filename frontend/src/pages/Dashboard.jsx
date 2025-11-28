@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Folder, Server, ArrowRight } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function Dashboard() {
     const [projects, setProjects] = useState([]);
@@ -14,7 +15,7 @@ export default function Dashboard() {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await axios.get('http://localhost:1234/api/projects', {
+                const response = await axios.get(`${API_URL}/api/projects`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProjects(response.data);

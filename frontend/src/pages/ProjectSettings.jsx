@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Trash2, AlertTriangle, Save } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function ProjectSettings() {
     const { projectId } = useParams();
@@ -17,7 +18,7 @@ export default function ProjectSettings() {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                const res = await axios.get(`http://localhost:1234/api/projects/${projectId}`, {
+                const res = await axios.get(`${API_URL}/api/projects/${projectId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProject(res.data);
@@ -36,7 +37,7 @@ export default function ProjectSettings() {
         if (!confirm("Final warning: This will delete the project and all its data.")) return;
 
         try {
-            await axios.delete(`http://localhost:1234/api/projects/${projectId}`, {
+            await axios.delete(`${API_URL}/api/projects/${projectId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success("Project deleted");

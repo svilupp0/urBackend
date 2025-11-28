@@ -3,6 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // 1. Import Auth Context
+import { API_URL } from '../config';
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -28,7 +29,7 @@ function Login() {
         try {
             // Note: Ngrok se access karte waqt localhost API shayad issue kare agar device alag ho.
             // Lekin agar same PC par browser hai to chalega.
-            const response = await axios.post('http://localhost:1234/api/auth/login', formData);
+            const response = await axios.post(`${API_URL}/api/auth/login`, formData);
 
             const { token } = response.data;
             console.log("Login Success! Token:", token);

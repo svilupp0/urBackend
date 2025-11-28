@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Database, Key, Copy, RefreshCw, AlertTriangle, Check, Layers } from 'lucide-react';
+import { API_URL } from '../config';
+
 
 function ProjectDetails() {
     const { projectId } = useParams();
@@ -18,7 +20,7 @@ function ProjectDetails() {
     useEffect(() => {
         const fetchProject = async () => {
             try {
-                const res = await axios.get(`http://localhost:1234/api/projects/${projectId}`, {
+                const res = await axios.get(`${API_URL}/api/projects/${projectId}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProject(res.data);
@@ -36,7 +38,7 @@ function ProjectDetails() {
 
         setIsRegenerating(true);
         try {
-            const res = await axios.patch(`http://localhost:1234/api/projects/${projectId}/regenerate-key`, {}, {
+            const res = await axios.patch(`${API_URL}/api/projects/${projectId}/regenerate-key`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setNewKey(res.data.apiKey);
@@ -109,8 +111,8 @@ function ProjectDetails() {
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label className="form-label">Project URL</label>
                             <div style={{ display: 'flex', gap: '10px' }}>
-                                <input readOnly value="http://localhost:1234/api" className="input-field" style={{ color: 'var(--color-text-muted)' }} />
-                                <button className="btn btn-secondary" onClick={() => copyToClipboard("http://localhost:1234/api")}>
+                                <input readOnly value={`${API_URL}/api`} className="input-field" style={{ color: 'var(--color-text-muted)' }} />
+                                <button className="btn btn-secondary" onClick={() => copyToClipboard(`${API_URL}/api`)}>
                                     <Copy size={16} />
                                 </button>
                             </div>
@@ -171,9 +173,9 @@ function ProjectDetails() {
             </div>
 
             <style>{`
-                .spin { animation: spin 1s linear infinite; }
+                                    .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { 100% { transform: rotate(360deg); } }
-            `}</style>
+                                    `}</style>
         </div>
     );
 }
