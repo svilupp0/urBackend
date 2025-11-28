@@ -94,7 +94,7 @@ function ProjectDetails() {
                 <div>
                     <h1 className="page-title">{project.name}</h1>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '5px' }}>
-                        <span className="badge" style={{ backgroundColor: 'rgba(62, 207, 142, 0.2)', color: 'var(--color-success)' }}>Active</span>
+                        <span className="badge" style={{ backgroundColor: 'rgba(62, 207, 142, 0.2)', color: 'var(--color-success)', padding: '2px 8px', borderRadius: '10px', paddingBottom: '5px' }}>Active</span>
                         <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Region: us-east-1</span>
                     </div>
                 </div>

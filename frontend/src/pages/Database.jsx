@@ -53,7 +53,7 @@ export default function Database() {
 
     useEffect(() => { fetchData(); }, [activeCollection, projectId, token]);
 
-    // 3. Handle Insert
+    // 3. Handle Insert (FIXED ✅)
     const handleInsert = async (e) => {
         e.preventDefault();
         try {
@@ -64,24 +64,7 @@ export default function Database() {
                 if (field.type === 'Boolean') formattedData[field.key] = formattedData[field.key] === 'true';
             });
 
-            await axios.post(`${API_URL}/api/data/${activeCollection.name}`, formattedData, {
-                headers: {
-                    'x-api-key': 'ADMIN_OVERRIDE', // Hum dashboard se hain, backend bypass karega agar hum token bhej rahe hote (lekin abhi backend API key maangta hai). 
-                    // *CRITICAL*: Aapko backend ke data.js route me check karna padega. 
-                    // Abhi ke liye hum ise 'verifyApiKey' middleware bypass karne ke liye update nahi kar rahe, 
-                    // balki hume 'x-api-key' chahiye.
-                    // MVP hack: Backend ko dashboard se insert allow karne ke liye logic change karna padega.
-                    // Ya phir: Hum Project Details se API Key fetch karke yahan use kar sakte hain.
-                }
-                // WAIT: Data route 'verifyApiKey' use karta hai jo sirf 'x-api-key' check karta hai.
-                // Dashboard ke paas API Key nahi hai state me.
-                // Quick Fix: Humne API Key project details me fetch ki thi.
-            });
-            // *Correction*: Backend 'data.js' routes are public-facing APIs via API Key.
-            // Dashboard needs an internal route to insert data securely using Token.
-            // Let's create an Internal Insert Route below this code block.
-
-            // Assuming we added the internal route (See Backend Step below)
+            // Correct Internal API Call (Uses Token, NOT API Key)
             await axios.post(`${API_URL}/api/projects/${projectId}/collections/${activeCollection.name}/data`, formattedData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -89,8 +72,9 @@ export default function Database() {
             toast.success("Row inserted!");
             setShowInsertModal(false);
             setNewData({});
-            fetchData();
+            fetchData(); // Refresh table
         } catch (err) {
+            console.error(err);
             toast.error("Failed to insert data");
         }
     };
@@ -174,6 +158,7 @@ export default function Database() {
                                     <label className="form-label">{field.key} <span style={{ fontSize: '0.7em', color: '#666' }}>({field.type})</span></label>
                                     {field.type === 'Boolean' ? (
                                         <select className="input-field" onChange={e => setNewData({ ...newData, [field.key]: e.target.value })}>
+                                            <option value="">Select...</option>
                                             <option value="false">False</option>
                                             <option value="true">True</option>
                                         </select>

@@ -84,7 +84,13 @@ function App() {
         <Route path="/project/:projectId/storage" element={<ProtectedRoute><MainLayout><Storage /></MainLayout></ProtectedRoute>} />
 
         {/* 3. Register Docs Route */}
-        <Route path="/docs" element={<ProtectedRoute><MainLayout><Docs /></MainLayout></ProtectedRoute>} />
+        <Route path="/docs" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Docs />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
 
         {/* 2. Register Auth Route */}
         <Route path="/project/:projectId/auth" element={<ProtectedRoute><MainLayout><Auth /></MainLayout></ProtectedRoute>} />
