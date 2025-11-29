@@ -263,3 +263,53 @@ td {
 tr:hover td {
   background-color: rgba(255, 255, 255, 0.02);
 }
+
+/* --- RESPONSIVE DASHBOARD --- */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    /* Default hidden on mobile */
+    transition: transform 0.3s ease-in-out;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    /* Slide in */
+  }
+
+  .main-content {
+    margin-left: 0;
+    /* Remove margin on mobile */
+    width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  /* Mobile Overlay (Black background when sidebar opens) */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 45;
+    /* Below sidebar (z-50) but above content */
+    animation: fadeIn 0.2s;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
