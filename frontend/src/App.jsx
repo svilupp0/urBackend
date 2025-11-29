@@ -10,6 +10,7 @@ import ProjectDetails from './pages/ProjectDetails';
 import CreateProject from './pages/CreateProject';
 import CreateCollection from './pages/CreateCollection';
 import NotFound from './pages/NotFound';
+import Analytics from './pages/Analytics';
 
 // 1. Import Database Page
 import Database from './pages/Database';
@@ -89,6 +90,15 @@ function App() {
           <ProtectedRoute>
             <MainLayout>
               <Docs />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+
+        {/* 2. Add Analytics Route */}
+        <Route path="/project/:projectId/analytics" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <Analytics />
             </MainLayout>
           </ProtectedRoute>
         } />

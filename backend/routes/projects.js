@@ -3,6 +3,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const Project = require('../models/Project');
+const Log = require('../models/Log');
+
 const authMiddleware = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer'); // Added Multer
@@ -113,7 +115,7 @@ router.get('/:projectId/collections/:collectionName/data', authMiddleware, async
     }
 });
 
-// 7. DELETE ROW
+// 7. DELETE ROW (Internal - From Dashboard)
 router.delete('/:projectId/collections/:collectionName/data/:id', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName, id } = req.params;
@@ -121,7 +123,23 @@ router.delete('/:projectId/collections/:collectionName/data/:id', authMiddleware
         if (!project) return res.status(404).send("Project not found.");
 
         const finalCollectionName = `${project._id}_${collectionName}`;
-        await mongoose.connection.db.collection(finalCollectionName).deleteOne({ _id: new ObjectId(id) });
+        const collection = mongoose.connection.db.collection(finalCollectionName);
+
+        // 1. Find document to calculate size
+        const docToDelete = await collection.findOne({ _id: new ObjectId(id) });
+
+        if (docToDelete) {
+            // Calculate size
+            const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
+
+            // 2. Delete
+            await collection.deleteOne({ _id: new ObjectId(id) });
+
+            // 3. Update Usage (Reduce)
+            project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
+            await project.save();
+        }
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).send(err.message);
@@ -167,6 +185,11 @@ router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'),
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
         if (!project) return res.status(404).send("Project not found");
 
+        // --- NEW: Check Storage Limit ---
+        if (project.storageUsed + file.size > project.storageLimit) {
+            return res.status(403).send("Storage limit exceeded. Delete some files.");
+        }
+
         const fileName = `${projectId}/${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`;
 
         const { error } = await supabase.storage.from("dev-files").upload(fileName, file.buffer, {
@@ -174,6 +197,11 @@ router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'),
         });
 
         if (error) throw error;
+
+        // --- NEW: Update Storage Usage ---
+        project.storageUsed += file.size; // Add file size to total
+        await project.save();
+
         res.json({ message: "Uploaded" });
     } catch (err) {
         res.status(500).send(err.message);
@@ -275,6 +303,7 @@ router.patch('/:projectId', authMiddleware, async (req, res) => {
 
 
 
+// INSERT DATA (Internal - From Dashboard)
 router.post('/:projectId/collections/:collectionName/data', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName } = req.params;
@@ -284,12 +313,24 @@ router.post('/:projectId/collections/:collectionName/data', authMiddleware, asyn
         const finalCollectionName = `${project._id}_${collectionName}`;
         const incomingData = req.body;
 
-        // Note: Yahan aap chahein to schema validation (jo data.js me kiya tha) duplicate kar sakte hain safety ke liye.
-        // Abhi ke liye direct insert kar rahe hain MVP ke liye.
+        // --- NEW: Calculate Size & Check Limit ---
+        const docSize = Buffer.byteLength(JSON.stringify(incomingData));
 
+        // Default limit 50MB agar set na ho
+        const limit = project.databaseLimit || 50 * 1024 * 1024;
+
+        if ((project.databaseUsed || 0) + docSize > limit) {
+            return res.status(403).send("Database limit exceeded. Delete some data.");
+        }
+
+        // Insert
         const result = await mongoose.connection.db
             .collection(finalCollectionName)
             .insertOne(incomingData);
+
+        // --- NEW: Update Usage ---
+        project.databaseUsed = (project.databaseUsed || 0) + docSize;
+        await project.save();
 
         res.json(result);
     } catch (err) {
@@ -330,6 +371,46 @@ router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
         }
 
         res.json({ success: true, count: deletedCount });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+router.get('/:projectId/analytics', authMiddleware, async (req, res) => {
+    try {
+        const { projectId } = req.params;
+
+        // 1. Get Storage Stats
+        const project = await Project.findOne({ _id: projectId });
+
+        // 2. Get Total Requests
+        const totalRequests = await Log.countDocuments({ projectId });
+
+        // 3. Get Recent Logs (Last 50)
+        const logs = await Log.find({ projectId }).sort({ timestamp: -1 }).limit(50);
+
+        // 4. Get Requests per Day (For Chart)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const chartData = await Log.aggregate([
+            { $match: { projectId: new mongoose.Types.ObjectId(projectId), timestamp: { $gte: sevenDaysAgo } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json({
+            storage: { used: project.storageUsed, limit: project.storageLimit },
+            database: { used: project.databaseUsed, limit: project.databaseLimit }, // Add this
+            totalRequests,
+            logs,
+            chartData
+        });
     } catch (err) {
         res.status(500).send(err.message);
     }

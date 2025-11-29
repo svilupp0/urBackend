@@ -9,42 +9,48 @@ const verifyApiKey = require('../middleware/verifyApiKey');
 router.post('/:collectionName', verifyApiKey, async (req, res) => {
     try {
         const { collectionName } = req.params;
-        const project = req.project;
+        const project = req.project; // Middleware se aaya, lekin ye purana instance ho sakta hai
 
-        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        // Latest Project Data fetch karein (taaki accurate usage mile)
+        const currentProject = await Project.findById(project._id);
+
+        const collectionConfig = currentProject.collections.find(c => c.name === collectionName);
         if (!collectionConfig) return res.status(404).send(`Collection '${collectionName}' not found.`);
 
         const schemaRules = collectionConfig.model;
         const incomingData = req.body;
-
-        // --- FIX: SANITIZATION START ---
         const cleanData = {};
 
+        // --- VALIDATION & SANITIZATION ---
         for (const field of schemaRules) {
-            // Check Required
             if (field.required && incomingData[field.key] === undefined) {
                 return res.status(400).send(`Field '${field.key}' is required.`);
             }
-
-            // Check Type & Add to cleanData
             if (incomingData[field.key] !== undefined) {
-                if (field.type === 'Number' && typeof incomingData[field.key] !== 'number') {
-                    return res.status(400).send(`Field '${field.key}' must be a Number.`);
-                }
-                if (field.type === 'Boolean' && typeof incomingData[field.key] !== 'boolean') {
-                    return res.status(400).send(`Field '${field.key}' must be a Boolean.`);
-                }
-                // Agar valid hai, tabhi cleanData me add karo
+                // Type checking logic (same as before)...
+                if (field.type === 'Number' && typeof incomingData[field.key] !== 'number') return res.status(400).send(`Field '${field.key}' must be a Number.`);
+                if (field.type === 'Boolean' && typeof incomingData[field.key] !== 'boolean') return res.status(400).send(`Field '${field.key}' must be a Boolean.`);
+
                 cleanData[field.key] = incomingData[field.key];
             }
         }
-        // --- FIX: SANITIZATION END ---
 
+        // --- NEW: CHECK DB LIMIT ---
+        // Calculate approx size in bytes
+        const docSize = Buffer.byteLength(JSON.stringify(cleanData));
+
+        if (currentProject.databaseUsed + docSize > currentProject.databaseLimit) {
+            return res.status(403).send("Database limit exceeded. Delete some data to free up space.");
+        }
+
+        // Insert Data
         const finalCollectionName = `${project._id}_${collectionName}`;
         const collection = mongoose.connection.db.collection(finalCollectionName);
-
-        // Sirf cleanData insert karo, incomingData nahi
         const result = await collection.insertOne(cleanData);
+
+        // --- NEW: UPDATE USAGE ---
+        currentProject.databaseUsed += docSize;
+        await currentProject.save();
 
         res.status(201).json({
             message: "Data inserted successfully",
@@ -122,23 +128,32 @@ router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
         const { collectionName, id } = req.params;
         const project = req.project;
 
-        const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) return res.status(404).send(`Collection not found.`);
+        // Latest Project Fetch
+        const currentProject = await Project.findById(project._id);
 
         const finalCollectionName = `${project._id}_${collectionName}`;
+        const collection = mongoose.connection.db.collection(finalCollectionName);
 
-        const result = await mongoose.connection.db
-            .collection(finalCollectionName)
-            .deleteOne({ _id: new ObjectId(id) });
+        // Pehle document dhoondo taaki size pata chale
+        const docToDelete = await collection.findOne({ _id: new ObjectId(id) });
 
-        if (result.deletedCount === 0) {
-            return res.status(404).send("Document not found to delete.");
-        }
+        if (!docToDelete) return res.status(404).send("Document not found.");
 
-        res.json({ message: "Document deleted successfully", id });
+        // Calculate size to subtract
+        // Note: _id field bhi count hota hai, approx size le rahe hain
+        const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
+
+        // Delete
+        await collection.deleteOne({ _id: new ObjectId(id) });
+
+        // Update Usage (Ensure it doesn't go below 0)
+        currentProject.databaseUsed = Math.max(0, currentProject.databaseUsed - docSize);
+        await currentProject.save();
+
+        res.json({ message: "Document deleted", id });
 
     } catch (err) {
-        res.status(400).send("Invalid ID format or Server Error: " + err.message);
+        res.status(400).send("Error: " + err.message);
     }
 });
 

@@ -1,7 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-    LayoutDashboard, Database, Shield, HardDrive, Settings,
+    LayoutDashboard, Database, Shield, HardDrive, Settings, BarChart2,
     ArrowLeft, FileText, UserCog, LogOut, X // Import X for close
 } from 'lucide-react';
 
@@ -59,6 +59,9 @@ function Sidebar({ logo, isOpen, onClose }) { // Props received
                         </Link>
                         <Link to={`/project/${projectId}/storage`} onClick={handleNavClick} className={`nav-item ${isActive(`/project/${projectId}/storage`) ? 'active' : ''}`}>
                             <HardDrive size={18} /> <span>Storage</span>
+                        </Link>
+                        <Link to={`/project/${projectId}/analytics`} onClick={handleNavClick} className={`nav-item ${isActive(`/project/${projectId}/analytics`) ? 'active' : ''}`}>
+                            <BarChart2 size={18} /> <span>Analytics</span>
                         </Link>
                         <Link to={`/project/${projectId}/settings`} onClick={handleNavClick} className={`nav-item ${isActive(`/project/${projectId}/settings`) ? 'active' : ''}`}>
                             <Settings size={18} /> <span>Settings</span>

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+
 const { createClient } = require('@supabase/supabase-js');
 const verifyApiKey = require('../middleware/verifyApiKey');
 
@@ -23,13 +24,23 @@ router.post('/upload', verifyApiKey, upload.single('file'), async (req, res) => 
         if (!file) return res.status(400).send("No file uploaded.");
 
         const project = req.project;
+
+        // 1. Check Storage Limit
+        if (project.storageUsed + file.size > project.storageLimit) {
+            return res.status(403).send("Storage limit exceeded. Upgrade plan or delete files.");
+        }
+
         const fileName = `${project._id}/${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`;
+
 
         const { data, error } = await supabase.storage
             .from("dev-files")
             .upload(fileName, file.buffer, { contentType: file.mimetype });
 
         if (error) throw error;
+
+        project.storageUsed += file.size;
+        await project.save();
 
         const { data: publicUrlData } = supabase.storage
             .from("dev-files")

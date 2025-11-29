@@ -31,7 +31,16 @@ const projectSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    collections: [collectionSchema]
+    collections: [collectionSchema],
+
+    // --- STORAGE LIMITS (Files) ---
+    storageUsed: { type: Number, default: 0 }, // in bytes
+    storageLimit: { type: Number, default: 100 * 1024 * 1024 }, // 100MB for Files
+
+    // --- NEW: DATABASE LIMITS (JSON Docs) ---
+    databaseUsed: { type: Number, default: 0 }, // in bytes
+    databaseLimit: { type: Number, default: 50 * 1024 * 1024 } // 50MB for Data (approx 50,000 large docs)
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', projectSchema);

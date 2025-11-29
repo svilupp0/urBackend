@@ -24,6 +24,9 @@ app.get('/', (req, res) => {
     res.send("listening")
 })
 
+const { limiter, logger } = require('./middleware/api_usage');
+const verifyApiKey = require('./middleware/verifyApiKey');
+
 // defining Routes
 const authRoute = require('./routes/auth');
 const projectRoute = require('./routes/projects');
@@ -33,11 +36,12 @@ const storageRoute = require('./routes/storage');
 
 
 // Using routes 
+app.use('/api/', limiter);
 app.use('/api/auth', authRoute);
 app.use('/api/projects', projectRoute);
-app.use('/api/data', dataRoute);
+app.use('/api/data', verifyApiKey, logger, dataRoute);
 app.use('/api/userAuth', userAuthRoute);
-app.use('/api/storage', storageRoute);
+app.use('/api/storage', verifyApiKey, logger, storageRoute);
 
 const PORT = process.env.PORT || 1234;
 app.listen(PORT, () => {
