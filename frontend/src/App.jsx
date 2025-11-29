@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import ProjectDetails from './pages/ProjectDetails';
 import CreateProject from './pages/CreateProject';
 import CreateCollection from './pages/CreateCollection';
+import NotFound from './pages/NotFound';
 
 // 1. Import Database Page
 import Database from './pages/Database';
@@ -109,6 +110,9 @@ function App() {
             </MainLayout>
           </ProtectedRoute>
         } />
+
+        {/* 2. Catch-all 404 Route (Sabse last mein hona chahiye) */}
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
     </div>

@@ -295,7 +295,45 @@ router.post('/:projectId/collections/:collectionName/data', authMiddleware, asyn
     } catch (err) {
         res.status(500).send(err.message);
     }
-}); 
+});
+
+
+// 11. DELETE ALL FILES (Internal - Dashboard se)
+router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).send("Project not found");
+
+        let deletedCount = 0;
+        let hasMore = true;
+
+        // Loop to delete all files (Supabase limit handle karne ke liye)
+        while (hasMore) {
+            const { data: files, error } = await supabase.storage
+                .from('dev-files')
+                .list(projectId, { limit: 100 });
+
+            if (error) throw error;
+
+            if (files && files.length > 0) {
+                const paths = files.map(f => `${projectId}/${f.name}`);
+                const { error: delError } = await supabase.storage
+                    .from('dev-files')
+                    .remove(paths);
+
+                if (delError) throw delError;
+                deletedCount += files.length;
+            } else {
+                hasMore = false;
+            }
+        }
+
+        res.json({ success: true, count: deletedCount });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
 
 
 

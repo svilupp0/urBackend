@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { UploadCloud, Trash2, File, Image as ImageIcon, ExternalLink, HardDrive } from 'lucide-react';
+import { UploadCloud, Trash2, File, ExternalLink, HardDrive, AlertTriangle } from 'lucide-react';
 import { API_URL } from '../config';
 
 export default function Storage() {
@@ -13,6 +13,7 @@ export default function Storage() {
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [deletingAll, setDeletingAll] = useState(false);
     const fileInputRef = useRef(null);
 
     // 1. Fetch Files
@@ -52,7 +53,7 @@ export default function Storage() {
                 }
             });
             toast.success("File uploaded!", { id: toastId });
-            fetchFiles(); // Refresh list
+            fetchFiles();
         } catch (err) {
             toast.error("Upload failed", { id: toastId });
         } finally {
@@ -61,7 +62,7 @@ export default function Storage() {
         }
     };
 
-    // 3. Handle Delete
+    // 3. Handle Single Delete
     const handleDelete = async (path) => {
         if (!confirm("Delete this file permanently?")) return;
 
@@ -74,6 +75,25 @@ export default function Storage() {
             toast.success("File deleted");
         } catch (err) {
             toast.error("Failed to delete file");
+        }
+    };
+
+    // 4. Handle Delete ALL (New Feature)
+    const handleDeleteAll = async () => {
+        const confirmMsg = prompt(`Type "DELETE" to confirm wiping all ${files.length} files.`);
+        if (confirmMsg !== "DELETE") return;
+
+        setDeletingAll(true);
+        try {
+            await axios.delete(`${API_URL}/api/projects/${projectId}/storage/files`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setFiles([]);
+            toast.success("All files deleted.");
+        } catch (err) {
+            toast.error("Failed to clear storage");
+        } finally {
+            setDeletingAll(false);
         }
     };
 
@@ -96,7 +116,17 @@ export default function Storage() {
                     <h1 className="page-title">Storage</h1>
                     <p style={{ color: 'var(--color-text-muted)' }}>Manage your project's media and assets.</p>
                 </div>
-                <div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    {files.length > 0 && (
+                        <button
+                            onClick={handleDeleteAll}
+                            className="btn btn-danger"
+                            disabled={deletingAll}
+                        >
+                            {deletingAll ? 'Deleting...' : <><AlertTriangle size={16} /> Delete All</>}
+                        </button>
+                    )}
+
                     <input
                         type="file"
                         ref={fileInputRef}
@@ -151,7 +181,6 @@ export default function Storage() {
                                 <div style={{ padding: '12px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                     <div style={{ fontWeight: 500, marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9rem' }} title={file.name}>
                                         {file.name.split('_').slice(1).join('_') || file.name}
-                                        {/* Removes timestamp prefix for display */}
                                     </div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '10px' }}>
                                         {formatBytes(file.metadata?.size)}

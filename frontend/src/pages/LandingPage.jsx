@@ -98,7 +98,7 @@ function LandingPage() {
                         <p>Trusted by Me Building:</p>
 
                         <div className="trusted-by">
-                            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; <span>⚛️ React Apps</span>
+                            <span>⚛️ React Apps</span>
                             <span>📱 Mobile Apps</span>
                             <span>💻 Websites</span>
                             <span>🛠️ Internal Tools</span>
