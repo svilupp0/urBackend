@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Terminal, Database, Shield, HardDrive, Check, Server, Menu, X, ChevronDown } from 'lucide-react';
+import { Copy, Terminal, Database, Shield, HardDrive, Check, Server, Menu, X, ChevronDown, AlertCircle, Zap } from 'lucide-react';
 import { API_URL } from '../config';
 
 export default function Docs() {
@@ -60,6 +60,32 @@ console.log(data);
         );
     };
 
+    // Helper for Parameters Table
+    const ParamTable = ({ params }) => (
+        <div style={{ margin: '1rem 0', overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr style={{ borderBottom: '1px solid #333', textAlign: 'left' }}>
+                        <th style={{ padding: '8px', color: '#888' }}>Parameter</th>
+                        <th style={{ padding: '8px', color: '#888' }}>Type</th>
+                        <th style={{ padding: '8px', color: '#888' }}>Required</th>
+                        <th style={{ padding: '8px', color: '#888' }}>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {params.map((p, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #222' }}>
+                            <td style={{ padding: '8px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{p.name}</td>
+                            <td style={{ padding: '8px', color: '#aaa' }}>{p.type}</td>
+                            <td style={{ padding: '8px', color: p.required ? '#ef4444' : '#aaa' }}>{p.required ? 'Yes' : 'No'}</td>
+                            <td style={{ padding: '8px', color: '#ddd' }}>{p.desc}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
     const renderContent = () => {
         switch (activeTab) {
             case 'intro':
@@ -79,13 +105,13 @@ console.log(data);
                             <p style={{ fontSize: '0.9rem', marginBottom: 0, color: 'var(--color-text-main)' }}>
                                 Your <strong>x-api-key</strong> grants <strong>Admin Access</strong> (Read/Write/Delete).
                                 <br />
-                                ❌ <strong>NEVER</strong> use this key in client-side code.
+                                ❌ <strong>NEVER</strong> use this key in client-side code (frontend).
                                 <br />
                                 ✅ <strong>ONLY</strong> use this key in secure server-side environments.
                             </p>
                         </div>
 
-                        <div className="card">
+                        <div className="card" style={{ marginBottom: '2rem' }}>
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Server size={18} /> Base URL
                             </h3>
@@ -93,6 +119,59 @@ console.log(data);
                                 {API_URL}
                             </code>
                         </div>
+
+                        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Common Headers</h3>
+                        <ParamTable params={[
+                            { name: 'x-api-key', type: 'String', required: true, desc: 'Your Project API Key (Found in Dashboard)' },
+                            { name: 'Content-Type', type: 'String', required: true, desc: 'application/json (except for file uploads)' },
+                            { name: 'Authorization', type: 'String', required: false, desc: 'Bearer <USER_TOKEN> (For protected user routes)' },
+                        ]} />
+                    </div>
+                );
+
+            case 'limits':
+                return (
+                    <div className="fade-in">
+                        <h2 className="page-title">Limits & Quotas</h2>
+                        <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
+                            Constraints applied to your project to ensure fair usage and performance.
+                        </p>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                            <div className="card">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', color: 'var(--color-primary)' }}>
+                                    <Zap size={20} />
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Rate Limits</h3>
+                                </div>
+                                <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '5px' }}>100</div>
+                                <div style={{ fontSize: '0.9rem', color: '#888' }}>Requests per 15 minutes per IP</div>
+                            </div>
+
+                            <div className="card">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', color: '#3b82f6' }}>
+                                    <Database size={20} />
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>Database Size</h3>
+                                </div>
+                                <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '5px' }}>50 MB</div>
+                                <div style={{ fontSize: '0.9rem', color: '#888' }}>Max total data size per project</div>
+                            </div>
+
+                            <div className="card">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', color: '#f59e0b' }}>
+                                    <HardDrive size={20} />
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>File Storage</h3>
+                                </div>
+                                <div style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '5px' }}>100 MB</div>
+                                <div style={{ fontSize: '0.9rem', color: '#888' }}>Max total file storage per project</div>
+                            </div>
+                        </div>
+
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Specific Limits</h3>
+                        <ul style={{ listStyle: 'disc', paddingLeft: '20px', color: '#ddd', lineHeight: '1.8' }}>
+                            <li><strong>File Upload Size:</strong> Maximum 5 MB per single file.</li>
+                            <li><strong>Log Retention:</strong> API Logs are capped at 50MB or 50,000 entries (older logs are auto-deleted).</li>
+                            <li><strong>Response Timeout:</strong> Requests taking longer than 10 seconds may be terminated.</li>
+                        </ul>
                     </div>
                 );
 
@@ -105,6 +184,11 @@ console.log(data);
                         </p>
 
                         <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>1. Sign Up User</h3>
+                        <ParamTable params={[
+                            { name: 'email', type: 'String', required: true, desc: 'User email address' },
+                            { name: 'password', type: 'String', required: true, desc: 'Raw password (min 6 chars recommended)' },
+                            { name: '...', type: 'Any', required: false, desc: 'Any other fields (name, age) will be saved' },
+                        ]} />
                         <CodeBlock
                             method="POST"
                             url="/api/userAuth/signup"
@@ -113,6 +197,10 @@ console.log(data);
                         />
 
                         <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>2. Login User</h3>
+                        <ParamTable params={[
+                            { name: 'email', type: 'String', required: true, desc: 'Registered email' },
+                            { name: 'password', type: 'String', required: true, desc: 'User password' },
+                        ]} />
                         <CodeBlock
                             method="POST"
                             url="/api/userAuth/login"
@@ -121,7 +209,9 @@ console.log(data);
                         />
 
                         <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>3. Get Profile (Me)</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Send the Token in <code>Authorization: Bearer TOKEN</code> header.</p>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                            Requires <code>Authorization: Bearer &lt;TOKEN&gt;</code> header.
+                        </p>
                         <CodeBlock
                             method="GET"
                             url="/api/userAuth/me"
@@ -138,6 +228,12 @@ console.log(data);
                             Perform CRUD operations on your collections.
                         </p>
 
+                        <div className="card" style={{ marginBottom: '1rem', backgroundColor: '#1a1a1a' }}>
+                            <p style={{ fontSize: '0.9rem', color: '#aaa' }}>
+                                <strong>Path Parameter:</strong> <code>:collectionName</code> is the name of your table (e.g., 'products', 'orders').
+                            </p>
+                        </div>
+
                         <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>1. Get All Items</h3>
                         <CodeBlock
                             method="GET"
@@ -145,14 +241,10 @@ console.log(data);
                             comment="Fetch all documents"
                         />
 
-                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>2. Get Single Item</h3>
-                        <CodeBlock
-                            method="GET"
-                            url="/api/data/:collectionName/:id"
-                            comment="Fetch a document by ID"
-                        />
-
-                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>3. Insert Data</h3>
+                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>2. Insert Data</h3>
+                        <ParamTable params={[
+                            { name: 'schema_fields', type: 'Any', required: true, desc: 'Fields matching your collection schema' },
+                        ]} />
                         <CodeBlock
                             method="POST"
                             url="/api/data/:collectionName"
@@ -160,15 +252,21 @@ console.log(data);
                             comment="Add a new item"
                         />
 
-                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>4. Update Data</h3>
+                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>3. Get / Update / Delete by ID</h3>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
+                            Use the <code>_id</code> returned when creating an item.
+                        </p>
+                        <CodeBlock
+                            method="GET"
+                            url="/api/data/:collectionName/:id"
+                            comment="Fetch a document by ID"
+                        />
                         <CodeBlock
                             method="PUT"
                             url="/api/data/:collectionName/:id"
                             body={{ price: 1199, inStock: false }}
-                            comment="Update specific fields of a document"
+                            comment="Update specific fields"
                         />
-
-                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>5. Delete Data</h3>
                         <CodeBlock
                             method="DELETE"
                             url="/api/data/:collectionName/:id"
@@ -177,7 +275,7 @@ console.log(data);
                     </div>
                 );
 
-case 'storage':
+            case 'storage':
                 return (
                     <div className="fade-in">
                         <h2 className="page-title">Storage</h2>
@@ -187,11 +285,15 @@ case 'storage':
 
                         <div className="card" style={{ borderLeft: '4px solid var(--color-warning)', marginBottom: '2rem' }}>
                             <p style={{ fontSize: '0.9rem' }}>
-                                <strong>Note:</strong> For file uploads, use <code>FormData</code> instead of JSON.
+                                <strong>Note:</strong> Do NOT send JSON. Send <code>multipart/form-data</code>.
                             </p>
                         </div>
 
                         <h3 style={{ fontSize: '1.1rem' }}>1. Upload File</h3>
+                        <ParamTable params={[
+                            { name: 'file', type: 'File', required: true, desc: 'The file object to upload (Max 5MB)' },
+                        ]} />
+
                         <div className="card" style={{ padding: '0', overflow: 'hidden', backgroundColor: '#111', border: '1px solid #333', marginTop: '1rem', marginBottom: '2rem' }}>
                             <div style={{ padding: '16px', overflowX: 'auto' }}>
                                 <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: '0.85rem', color: '#e5e5e5', lineHeight: 1.6 }}>{`
@@ -202,6 +304,7 @@ const response = await fetch('${API_URL}/api/storage/upload', {
     method: 'POST',
     headers: {
         'x-api-key': 'YOUR_API_KEY_HERE'
+        // Content-Type header is set automatically by browser for FormData
     },
     body: formData
 });
@@ -214,24 +317,14 @@ console.log("File URL:", result.url);
                         </div>
 
                         <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>2. Delete File</h3>
-                        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>Provide the <code>path</code> received from the upload response.</p>
+                        <ParamTable params={[
+                            { name: 'path', type: 'String', required: true, desc: 'The "path" received from upload response' },
+                        ]} />
                         <CodeBlock
                             method="DELETE"
                             url="/api/storage/file"
                             body={{ path: "PROJECT_ID/171569483_image.png" }}
                             comment="Delete a specific file"
-                        />
-
-                        <h3 style={{ fontSize: '1.1rem', marginTop: '2rem' }}>3. Delete All Files</h3>
-                        <div className="card" style={{ borderLeft: '4px solid var(--color-danger)', backgroundColor: 'rgba(239, 68, 68, 0.1)', marginBottom: '1rem' }}>
-                            <p style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>
-                                ⚠️ <strong>Warning:</strong> This will permanently delete all files in your project bucket.
-                            </p>
-                        </div>
-                        <CodeBlock
-                            method="DELETE"
-                            url="/api/storage/all"
-                            comment="Clear entire storage bucket"
                         />
                     </div>
                 );
@@ -249,9 +342,7 @@ console.log("File URL:", result.url);
                 <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'space-between' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Menu size={16} />
-                        {activeTab === 'intro' ? 'Introduction' :
-                            activeTab === 'auth' ? 'Authentication' :
-                                activeTab === 'data' ? 'Database & API' : 'Storage'}
+                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                     </span>
                     <ChevronDown size={16} style={{ transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }} />
                 </button>
@@ -265,6 +356,7 @@ console.log("File URL:", result.url);
                 <ul style={{ listStyle: 'none', padding: 0 }}>
                     {[
                         { id: 'intro', label: 'Introduction', icon: Terminal },
+                        { id: 'limits', label: 'Limits & Quotas', icon: AlertCircle }, // New Tab
                         { id: 'auth', label: 'Authentication', icon: Shield },
                         { id: 'data', label: 'Database & API', icon: Database },
                         { id: 'storage', label: 'Storage', icon: HardDrive },
