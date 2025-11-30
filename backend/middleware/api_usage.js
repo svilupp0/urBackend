@@ -12,8 +12,12 @@ const limiter = rateLimit({
 
 // 2. Logger (UPDATED ✅)
 const logger = (req, res, next) => {
-    // CHANGE: Use 'req.originalUrl' instead of 'req.path'
-    if (req.originalUrl.startsWith('/api/data') || req.originalUrl.startsWith('/api/storage')) {
+    // Check for Data, Storage, AND UserAuth routes
+    if (
+        req.originalUrl.startsWith('/api/data') ||
+        req.originalUrl.startsWith('/api/storage') ||
+        req.originalUrl.startsWith('/api/userAuth') // <--- Added this
+    ) {
 
         res.on('finish', async () => {
             // verifyApiKey middleware se 'req.project' set hona zaroori hai
@@ -22,17 +26,14 @@ const logger = (req, res, next) => {
                     await Log.create({
                         projectId: req.project._id,
                         method: req.method,
-                        path: req.originalUrl, // Save full path
+                        path: req.originalUrl,
                         status: res.statusCode,
                         ip: req.ip
                     });
-                    // Console log for debugging
                     console.log(`📝 Logged: ${req.method} ${req.originalUrl} (${res.statusCode})`);
                 } catch (e) {
                     console.error("Logging failed:", e.message);
                 }
-            } else {
-                console.log("⚠️ Logger skipped: No project found in request (Check verifyApiKey order)");
             }
         });
     }

@@ -39,8 +39,11 @@ const storageRoute = require('./routes/storage');
 app.use('/api/', limiter);
 app.use('/api/auth', authRoute);
 app.use('/api/projects', projectRoute);
+
+// Logger added to userAuth route 👇
+app.use('/api/userAuth', logger, userAuthRoute);
+
 app.use('/api/data', verifyApiKey, logger, dataRoute);
-app.use('/api/userAuth', userAuthRoute);
 app.use('/api/storage', verifyApiKey, logger, storageRoute);
 
 const PORT = process.env.PORT || 1234;
