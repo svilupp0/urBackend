@@ -87,11 +87,7 @@ function App() {
 
         {/* 3. Register Docs Route */}
         <Route path="/docs" element={
-          <ProtectedRoute>
-            <MainLayout>
-              <Docs />
-            </MainLayout>
-          </ProtectedRoute>
+          <Docs />
         } />
 
         {/* 2. Add Analytics Route */}

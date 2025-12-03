@@ -73,9 +73,6 @@ function Sidebar({ logo, isOpen, onClose }) { // Props received
                         <Link to="/dashboard" onClick={handleNavClick} className={`nav-item ${isActive('/dashboard') ? 'active' : ''}`}>
                             <LayoutDashboard size={18} /> <span>All Projects</span>
                         </Link>
-                        <Link to="/docs" onClick={handleNavClick} className={`nav-item ${isActive('/docs') ? 'active' : ''}`}>
-                            <FileText size={18} /> <span>Documentation</span>
-                        </Link>
                         <Link to="/settings" onClick={handleNavClick} className={`nav-item ${isActive('/settings') ? 'active' : ''}`}>
                             <UserCog size={18} /> <span>Account Settings</span>
                         </Link>

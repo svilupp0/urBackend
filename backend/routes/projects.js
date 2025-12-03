@@ -4,21 +4,44 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const Project = require('../models/Project');
 const Log = require('../models/Log');
-
+const { z } = require('zod');
 const authMiddleware = require('../middleware/authMiddleware');
 const { v4: uuidv4 } = require('uuid');
-const multer = require('multer'); // Added Multer
-const { createClient } = require('@supabase/supabase-js'); // Added Supabase
+const multer = require('multer');
+const { createClient } = require('@supabase/supabase-js');
 
 // --- CONFIGURATION ---
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB Limit
 
+// --- 🛡️ VALIDATION SCHEMAS ---
+
+// 1. Create Project Schema (Added this)
+const createProjectSchema = z.object({
+    name: z.string().min(1, "Project name is required"),
+    description: z.string().optional()
+});
+
+// 2. Create Collection Schema
+const createCollectionSchema = z.object({
+    projectId: z.string().min(1, "Project ID is required"),
+    collectionName: z.string().min(1, "Collection Name is required"),
+    schema: z.array(z.object({
+        key: z.string(),
+        type: z.enum(['String', 'Number', 'Boolean', 'Date']),
+        required: z.boolean().optional()
+    })).optional()
+});
+
+// --- ROUTES ---
+
 // 1. CREATE PROJECT
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const { name, description } = req.body;
+        // Validation Applied
+        const { name, description } = createProjectSchema.parse(req.body);
+
         const newProject = new Project({
             name,
             description,
@@ -27,30 +50,40 @@ router.post('/', authMiddleware, async (req, res) => {
             jwtSecret: uuidv4()
         });
         await newProject.save();
-        res.status(201).send(newProject);
+
+        const projectObj = newProject.toObject();
+        delete projectObj.apiKey;
+        delete projectObj.jwtSecret;
+
+        res.status(201).json(projectObj); // Fixed: .json()
     } catch (err) {
-        res.status(500).send(err.message);
+        if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+        res.status(500).json({ error: err.message }); // Fixed: .json()
     }
-})
+});
 
 // 2. GET ALL PROJECTS
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const projects = await Project.find({ owner: req.user._id }).select('-apiKey -jwtSecret');
-        res.status(200).send(projects);
+        res.status(200).json(projects); // Fixed: .json()
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
-})
+});
 
 // 3. GET SINGLE PROJECT
 router.get('/:projectId', authMiddleware, async (req, res) => {
     try {
         const project = await Project.findOne({ _id: req.params.projectId, owner: req.user._id }).select('-apiKey -jwtSecret');
-        if (!project) return res.status(404).send("Project not found.");
-        res.json(project);
+        if (!project) return res.status(404).json({ error: "Project not found." });
+
+        const projectObj = project.toObject();
+        delete projectObj.apiKey;
+        delete projectObj.jwtSecret;
+        res.json(projectObj);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -63,33 +96,43 @@ router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
             { $set: { apiKey: newApiKey } },
             { new: true }
         );
-        if (!project) return res.status(404).send("Project not found.");
-        res.json({ apiKey: project.apiKey });
+        if (!project) return res.status(404).json({ error: "Project not found." });
+
+        const projectObj = project.toObject();
+        delete projectObj.apiKey;
+        delete projectObj.jwtSecret;
+        res.json({ apiKey: project.apiKey, project: projectObj });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// 5. CREATE COLLECTION
+// 5. CREATE COLLECTION (Fixed Validation)
 router.post('/collection', authMiddleware, async (req, res) => {
     try {
-        const { projectId, collectionName, schema } = req.body;
+        // 🛡️ Fixed: Using Zod Schema here
+        const { projectId, collectionName, schema } = createCollectionSchema.parse(req.body);
+
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send('Project not found');
+        if (!project) return res.status(404).json({ error: 'Project not found' });
 
         const exists = project.collections.find(c => c.name === collectionName);
-        if (exists) return res.status(400).send('Collection already exists');
+        if (exists) return res.status(400).json({ error: 'Collection already exists' });
 
-        if (!project.jwtSecret) project.jwtSecret = uuidv4(); // Patch old projects
+        if (!project.jwtSecret) project.jwtSecret = uuidv4();
 
         project.collections.push({ name: collectionName, model: schema });
         await project.save();
 
-        project.apiKey = undefined;
-        project.jwtSecret = undefined;
-        res.status(201).send(project);
+        // Safe Response
+        const projectObj = project.toObject();
+        delete projectObj.apiKey;
+        delete projectObj.jwtSecret;
+
+        res.status(201).json(projectObj);
     } catch (err) {
-        res.status(500).send(err.message);
+        if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -100,7 +143,7 @@ router.get('/:projectId/collections/:collectionName/data', authMiddleware, async
     try {
         const { projectId, collectionName } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found.");
+        if (!project) return res.status(404).json({ error: "Project not found." });
 
         const finalCollectionName = `${project._id}_${collectionName}`;
         const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
@@ -111,38 +154,32 @@ router.get('/:projectId/collections/:collectionName/data', authMiddleware, async
         }
         res.json(data);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// 7. DELETE ROW (Internal - From Dashboard)
+// 7. DELETE ROW
 router.delete('/:projectId/collections/:collectionName/data/:id', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName, id } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found.");
+        if (!project) return res.status(404).json({ error: "Project not found." });
 
         const finalCollectionName = `${project._id}_${collectionName}`;
         const collection = mongoose.connection.db.collection(finalCollectionName);
 
-        // 1. Find document to calculate size
         const docToDelete = await collection.findOne({ _id: new ObjectId(id) });
 
         if (docToDelete) {
-            // Calculate size
             const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
-
-            // 2. Delete
             await collection.deleteOne({ _id: new ObjectId(id) });
-
-            // 3. Update Usage (Reduce)
             project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
             await project.save();
         }
 
         res.json({ success: true });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -153,9 +190,8 @@ router.get('/:projectId/storage/files', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found");
+        if (!project) return res.status(404).json({ error: "Project not found" });
 
-        // List files in the project's folder
         const { data, error } = await supabase.storage.from('dev-files').list(`${projectId}`, {
             limit: 100,
             sortBy: { column: 'created_at', order: 'desc' },
@@ -163,7 +199,6 @@ router.get('/:projectId/storage/files', authMiddleware, async (req, res) => {
 
         if (error) throw error;
 
-        // Generate public URLs
         const files = data.map(file => {
             const { data: publicUrlData } = supabase.storage.from("dev-files").getPublicUrl(`${projectId}/${file.name}`);
             return { ...file, publicUrl: publicUrlData.publicUrl, path: `${projectId}/${file.name}` };
@@ -171,23 +206,22 @@ router.get('/:projectId/storage/files', authMiddleware, async (req, res) => {
 
         res.json(files);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-// 9. UPLOAD FILE (Internal)
+// 9. UPLOAD FILE
 router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'), async (req, res) => {
     try {
         const { projectId } = req.params;
         const file = req.file;
-        if (!file) return res.status(400).send("No file uploaded");
+        if (!file) return res.status(400).json({ error: "No file uploaded" });
 
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found");
+        if (!project) return res.status(404).json({ error: "Project not found" });
 
-        // --- NEW: Check Storage Limit ---
         if (project.storageUsed + file.size > project.storageLimit) {
-            return res.status(403).send("Storage limit exceeded. Delete some files.");
+            return res.status(403).json({ error: "Storage limit exceeded. Delete some files." });
         }
 
         const fileName = `${projectId}/${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`;
@@ -198,13 +232,12 @@ router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'),
 
         if (error) throw error;
 
-        // --- NEW: Update Storage Usage ---
-        project.storageUsed += file.size; // Add file size to total
+        project.storageUsed += file.size;
         await project.save();
 
         res.json({ message: "Uploaded" });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
@@ -215,49 +248,40 @@ router.post('/:projectId/storage/delete', authMiddleware, async (req, res) => {
         const { path } = req.body;
 
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found");
+        if (!project) return res.status(404).json({ error: "Project not found" });
 
         const { error } = await supabase.storage.from('dev-files').remove([path]);
         if (error) throw error;
 
         res.json({ success: true });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
+// 11. DELETE PROJECT
 router.delete('/:projectId', authMiddleware, async (req, res) => {
     try {
         const projectId = req.params.projectId;
-
-        // 1. Find Project
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found or access denied.");
+        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
 
-        // 2. Delete All Collections (Data)
         for (const col of project.collections) {
             const collectionName = `${project._id}_${col.name}`;
             try {
                 await mongoose.connection.db.dropCollection(collectionName);
-                console.log(`Dropped collection: ${collectionName}`);
-            } catch (e) {
-                // Ignore if collection doesn't exist
-            }
+            } catch (e) { }
         }
 
-        // 3. Delete 'users' collection
         try {
             await mongoose.connection.db.dropCollection(`${project._id}_users`);
         } catch (e) { }
 
-        // 4. Delete Storage Files (Supabase Loop Fix)
-        // Loop chalayenge jab tak folder khali na ho jaye
         let hasMoreFiles = true;
         while (hasMoreFiles) {
             const { data: files, error } = await supabase.storage
                 .from('dev-files')
-                .list(`${projectId}`, { limit: 100 }); // Default limit 100 hoti hai
+                .list(`${projectId}`, { limit: 100 });
 
             if (error) throw error;
 
@@ -268,88 +292,74 @@ router.delete('/:projectId', authMiddleware, async (req, res) => {
                     .remove(pathsToRemove);
 
                 if (removeError) throw removeError;
-                console.log(`Deleted batch of ${files.length} files`);
             } else {
-                hasMoreFiles = false; // Files khatam
+                hasMoreFiles = false;
             }
         }
 
-        // 5. Delete Project Document
         await Project.deleteOne({ _id: projectId });
-
-        res.send({ message: "Project and all associated resources deleted successfully" });
+        res.json({ message: "Project and all associated resources deleted successfully" });
     } catch (err) {
         console.error(err);
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-
+// 12. UPDATE PROJECT
 router.patch('/:projectId', authMiddleware, async (req, res) => {
     try {
         const { name } = req.body;
         const project = await Project.findOneAndUpdate(
             { _id: req.params.projectId, owner: req.user._id },
-            { $set: { name } }, // Sirf naam update kar rahe hain abhi
+            { $set: { name } },
             { new: true }
         );
-        if (!project) return res.status(404).send("Project not found.");
+        if (!project) return res.status(404).json({ error: "Project not found." });
         res.json(project);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-
-// INSERT DATA (Internal - From Dashboard)
+// 13. INSERT DATA (Dashboard)
 router.post('/:projectId/collections/:collectionName/data', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found.");
+        if (!project) return res.status(404).json({ error: "Project not found." });
 
         const finalCollectionName = `${project._id}_${collectionName}`;
         const incomingData = req.body;
-
-        // --- NEW: Calculate Size & Check Limit ---
         const docSize = Buffer.byteLength(JSON.stringify(incomingData));
-
-        // Default limit 50MB agar set na ho
         const limit = project.databaseLimit || 50 * 1024 * 1024;
 
         if ((project.databaseUsed || 0) + docSize > limit) {
-            return res.status(403).send("Database limit exceeded. Delete some data.");
+            return res.status(403).json({ error: "Database limit exceeded. Delete some data." });
         }
 
-        // Insert
         const result = await mongoose.connection.db
             .collection(finalCollectionName)
             .insertOne(incomingData);
 
-        // --- NEW: Update Usage ---
         project.databaseUsed = (project.databaseUsed || 0) + docSize;
         await project.save();
 
         res.json(result);
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-// 11. DELETE ALL FILES (Internal - Dashboard se)
+// 14. DELETE ALL FILES
 router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
-        if (!project) return res.status(404).send("Project not found");
+        if (!project) return res.status(404).json({ error: "Project not found" });
 
         let deletedCount = 0;
         let hasMore = true;
 
-        // Loop to delete all files (Supabase limit handle karne ke liye)
         while (hasMore) {
             const { data: files, error } = await supabase.storage
                 .from('dev-files')
@@ -372,24 +382,18 @@ router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
 
         res.json({ success: true, count: deletedCount });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
+// 15. ANALYTICS
 router.get('/:projectId/analytics', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;
-
-        // 1. Get Storage Stats
         const project = await Project.findOne({ _id: projectId });
-
-        // 2. Get Total Requests
         const totalRequests = await Log.countDocuments({ projectId });
-
-        // 3. Get Recent Logs (Last 50)
         const logs = await Log.find({ projectId }).sort({ timestamp: -1 }).limit(50);
 
-        // 4. Get Requests per Day (For Chart)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -406,16 +410,14 @@ router.get('/:projectId/analytics', authMiddleware, async (req, res) => {
 
         res.json({
             storage: { used: project.storageUsed, limit: project.storageLimit },
-            database: { used: project.databaseUsed, limit: project.databaseLimit }, // Add this
+            database: { used: project.databaseUsed, limit: project.databaseLimit },
             totalRequests,
             logs,
             chartData
         });
     } catch (err) {
-        res.status(500).send(err.message);
+        res.status(500).json({ error: err.message });
     }
 });
-
-
 
 module.exports = router;
