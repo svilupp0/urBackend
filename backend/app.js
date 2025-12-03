@@ -11,13 +11,26 @@ app.use(express.urlencoded({ extended: true }));
 
 
 console.log(process.env.MONGO_URL);
-mongoose.connect(process.env.MONGO_URL)
-    .then((d) => {
-        console.log("connected");
-    })
-    .catch((e) => {
-        console.log('not connected')
-    })
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URL);
+        console.log("✅ MongoDB Connected");
+    } catch (err) {
+        console.error("❌ MongoDB Connection Error:", err);
+        setTimeout(connectDB, 5000);
+    }
+};
+
+mongoose.connection.on('error', (err) => {
+    console.error("MongoDB Runtime Error:", err);
+});
+
+mongoose.connection.on('disconnected', () => {
+    console.warn("MongoDB Disconnected. Retrying...");
+    connectDB();
+});
+
+connectDB();
 
 
 app.get('/', (req, res) => {
@@ -40,13 +53,48 @@ app.use('/api/', limiter);
 app.use('/api/auth', authRoute);
 app.use('/api/projects', projectRoute);
 
-// Logger added to userAuth route 👇
 app.use('/api/userAuth', logger, userAuthRoute);
 
 app.use('/api/data', verifyApiKey, logger, dataRoute);
 app.use('/api/storage', verifyApiKey, logger, storageRoute);
 
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err);
+    res.status(500).json({ error: "Something went wrong!" });
+});
+
 const PORT = process.env.PORT || 1234;
-app.listen(PORT, () => {
+
+
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// 🛡️ GRACEFUL SHUTDOWN (Fixed for Mongoose 8+)
+const gracefulShutdown = async () => {
+    console.log('🛑 SIGTERM/SIGINT received. Shutting down gracefully...');
+
+    server.close(async () => {
+        console.log('✅ HTTP server closed.');
+
+        try {
+            // Updated: No callback, use await instead
+            await mongoose.connection.close(false);
+            console.log('✅ MongoDB connection closed.');
+            process.exit(0);
+        } catch (err) {
+            console.error('❌ Error closing MongoDB connection:', err);
+            process.exit(1);
+        }
+    });
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+        console.error('Force shutting down...');
+        process.exit(1);
+    }, 10000);
+};
+
+// Listen for termination signals (e.g., from PM2, Docker, or Ctrl+C)
+process.on('SIGTERM', gracefulShutdown);
+process.on('SIGINT', gracefulShutdown);

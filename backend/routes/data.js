@@ -15,7 +15,12 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         const currentProject = await Project.findById(project._id);
 
         const collectionConfig = currentProject.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) return res.status(404).send(`Collection '${collectionName}' not found.`);
+        if (!collectionConfig) {
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
+        }
 
         const schemaRules = collectionConfig.model;
         const incomingData = req.body;
@@ -24,7 +29,10 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         // --- VALIDATION & SANITIZATION ---
         for (const field of schemaRules) {
             if (field.required && incomingData[field.key] === undefined) {
-                return res.status(400).send(`Field '${field.key}' is required.`);
+                return res.status(400).json({
+                    error: `Field '${field.key}' is required.`,
+                    field: field.key
+                });
             }
             if (incomingData[field.key] !== undefined) {
                 // Type checking logic (same as before)...
@@ -59,7 +67,8 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         });
 
     } catch (err) {
-        res.status(500).send(err.message);
+        console.log(err)
+        res.status(500).send('Some issue at our end');
     }
 });
 
@@ -73,7 +82,10 @@ router.get('/:collectionName', verifyApiKey, async (req, res) => {
 
         const collectionConfig = project.collections.find(c => c.name === collectionName);
         if (!collectionConfig) {
-            return res.status(404).send(`Collection '${collectionName}' not found.`);
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
         }
         const finalCollectionName = `${project._id}_${collectionName}`;
 
@@ -85,7 +97,8 @@ router.get('/:collectionName', verifyApiKey, async (req, res) => {
         res.json(data);
 
     } catch (err) {
-        res.status(500).send(err.message);
+        console.log(err)
+        res.status(500).send('Some issue at our end');
     }
 });
 
@@ -99,7 +112,12 @@ router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
         // Security Check
         const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) return res.status(404).send(`Collection not found.`);
+        if (!collectionConfig) {
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
+        }
 
         const finalCollectionName = `${project._id}_${collectionName}`;
 
@@ -115,8 +133,8 @@ router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
         res.json(doc);
 
     } catch (err) {
-        // Agar ID format galat hai toh MongoDB error dega
-        res.status(400).send("Invalid ID format or Server Error: " + err.message);
+        console.log(err)
+        res.status(500).send('Some issue at our end');
     }
 });
 
@@ -153,7 +171,8 @@ router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
         res.json({ message: "Document deleted", id });
 
     } catch (err) {
-        res.status(400).send("Error: " + err.message);
+        console.log(err)
+        res.status(500).send('Some issue at our end');
     }
 });
 
@@ -169,11 +188,14 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
         // Security & Config Find
         const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) return res.status(404).send(`Collection not found.`);
-
+        if (!collectionConfig) {
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
+        }
         // --- VALIDATION REPEAT (Zaroori hai) ---
         const schemaRules = collectionConfig.model;
-        // Hum loop chala kar check karenge ki jo fields update ho rahe hain woh sahi hain ya nahi
         for (const key in incomingData) {
             // 1. Check if field exists in schema
             const fieldRule = schemaRules.find(f => f.key === key);
@@ -210,7 +232,8 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
         res.json({ message: "Document updated successfully", id, updatedFields: incomingData });
 
     } catch (err) {
-        res.status(400).send("Invalid ID format, Validation Error or Server Error: " + err.message);
+        console.log(err)
+        res.status(500).send('Some issue at our end');
     }
 });
 
