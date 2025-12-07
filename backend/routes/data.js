@@ -4,6 +4,22 @@ const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
 const verifyApiKey = require('../middleware/verifyApiKey');
 
+
+//  sanitizer to remove keys starting with $
+const sanitize = (obj) => {
+    const clean = {};
+    for (const key in obj) {
+        if (!key.startsWith('$')) {
+            clean[key] = obj[key];
+        }
+    }
+    return clean;
+};
+
+
+
+
+
 // Dynamic POST Route
 // Example: POST /api/data/products
 router.post('/:collectionName', verifyApiKey, async (req, res) => {
@@ -42,6 +58,9 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
                 cleanData[field.key] = incomingData[field.key];
             }
         }
+
+        const safeData = sanitize(cleanData);
+        cleanData = safeData;
 
         // --- NEW: CHECK DB LIMIT ---
         // Calculate approx size in bytes
@@ -214,7 +233,11 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
             }
             // String check is loose in JS, usually fine.
         }
-        // ---------------------------------------
+
+
+        const safeData = sanitize(incomingData);
+        incomingData = safeData;
+
 
         const finalCollectionName = `${project._id}_${collectionName}`;
 

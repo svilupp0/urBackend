@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const app = require('../app');
 const Developer = require('../models/Developer');
 const bcrypt = require('bcryptjs');
-require('dotenv').config(); 
+require('dotenv').config();
 
 // --- SETUP ---
 beforeAll(async () => {
@@ -13,17 +13,14 @@ beforeAll(async () => {
         throw new Error("TEST_MONGO_URL not defined in .env");
     }
 
-    // Disconnect any existing connection first
     await mongoose.disconnect();
     await mongoose.connect(uri);
 });
 
 afterAll(async () => {
-    // Clean up and close connection
     await mongoose.connection.close();
 });
 
-// --- TESTS ---
 describe('Auth API Security', () => {
 
     // Har test se pehle database saaf karein
