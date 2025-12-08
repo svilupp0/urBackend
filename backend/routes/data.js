@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const Project = require('../models/Project');
 const { ObjectId } = require('mongodb');
 const verifyApiKey = require('../middleware/verifyApiKey');
 
@@ -87,7 +88,7 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.status(500).send('Some issue at our end');
+        res.status(500).json({ error: 'Some issue at our end' });
     }
 });
 
@@ -117,7 +118,7 @@ router.get('/:collectionName', verifyApiKey, async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.status(500).send('Some issue at our end');
+        res.status(500).json({ error: 'Some issue at our end' });
     }
 });
 
@@ -153,7 +154,7 @@ router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.status(500).send('Some issue at our end');
+        res.status(500).json({ error: 'Some issue at our end' });
     }
 });
 
@@ -191,7 +192,7 @@ router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.status(500).send('Some issue at our end');
+        res.status(500).json({ error: 'Some issue at our end' });
     }
 });
 
@@ -256,7 +257,7 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
     } catch (err) {
         console.log(err)
-        res.status(500).send('Some issue at our end');
+        res.status(500).json({ error: 'Some issue at our end' });
     }
 });
 
