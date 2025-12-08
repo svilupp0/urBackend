@@ -52,7 +52,6 @@ router.post('/', authMiddleware, async (req, res) => {
         await newProject.save();
 
         const projectObj = newProject.toObject();
-        delete projectObj.apiKey;
         delete projectObj.jwtSecret;
 
         res.status(201).json(projectObj); // Fixed: .json()
