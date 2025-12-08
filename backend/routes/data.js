@@ -61,7 +61,7 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         }
 
         const safeData = sanitize(cleanData);
-        cleanData = safeData;
+        Object.assign(cleanData, safeData);
 
         // --- NEW: CHECK DB LIMIT ---
         // Calculate approx size in bytes
