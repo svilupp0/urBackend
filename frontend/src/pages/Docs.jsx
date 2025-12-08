@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Copy, Terminal, Database, Shield, HardDrive, Check, Server, Menu, X, ChevronDown, AlertCircle, Zap } from 'lucide-react';
 import { API_URL } from '../config';
 
+import Footer from '../components/Layout/Footer';
+
 export default function Docs() {
     const [activeTab, setActiveTab] = useState('intro');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -335,61 +337,62 @@ console.log("File URL:", result.url);
     };
 
     return (
-        <div className="docs-container container">
+        <>
+            <div className="docs-container container">
 
-            {/* --- MOBILE TOGGLE --- */}
-            <div className="docs-mobile-header">
-                <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'space-between' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Menu size={16} />
-                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-                    </span>
-                    <ChevronDown size={16} style={{ transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }} />
-                </button>
-            </div>
+                {/* --- MOBILE TOGGLE --- */}
+                <div className="docs-mobile-header">
+                    <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-secondary" style={{ width: '100%', justifyContent: 'space-between' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Menu size={16} />
+                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                        </span>
+                        <ChevronDown size={16} style={{ transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s' }} />
+                    </button>
+                </div>
 
-            {/* --- LEFT SIDEBAR (Navigation) --- */}
-            <div className={`docs-sidebar ${isMenuOpen ? 'open' : ''}`}>
-                <h3 className="docs-nav-title">
-                    Documentation
-                </h3>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                    {[
-                        { id: 'intro', label: 'Introduction', icon: Terminal },
-                        { id: 'limits', label: 'Limits & Quotas', icon: AlertCircle }, // New Tab
-                        { id: 'auth', label: 'Authentication', icon: Shield },
-                        { id: 'data', label: 'Database & API', icon: Database },
-                        { id: 'storage', label: 'Storage', icon: HardDrive },
-                    ].map(item => (
-                        <li key={item.id} style={{ marginBottom: '4px' }}>
-                            <button
-                                onClick={() => {
-                                    setActiveTab(item.id);
-                                    setIsMenuOpen(false);
-                                }}
-                                className={`btn ${activeTab === item.id ? 'btn-primary' : 'btn-ghost'}`}
-                                style={{
-                                    width: '100%',
-                                    justifyContent: 'flex-start',
-                                    backgroundColor: activeTab === item.id ? 'rgba(62, 207, 142, 0.1)' : 'transparent',
-                                    color: activeTab === item.id ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                                    fontWeight: activeTab === item.id ? 600 : 400
-                                }}
-                            >
-                                <item.icon size={16} /> {item.label}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                {/* --- LEFT SIDEBAR (Navigation) --- */}
+                <div className={`docs-sidebar ${isMenuOpen ? 'open' : ''}`}>
+                    <h3 className="docs-nav-title">
+                        Documentation
+                    </h3>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                        {[
+                            { id: 'intro', label: 'Introduction', icon: Terminal },
+                            { id: 'limits', label: 'Limits & Quotas', icon: AlertCircle }, // New Tab
+                            { id: 'auth', label: 'Authentication', icon: Shield },
+                            { id: 'data', label: 'Database & API', icon: Database },
+                            { id: 'storage', label: 'Storage', icon: HardDrive },
+                        ].map(item => (
+                            <li key={item.id} style={{ marginBottom: '4px' }}>
+                                <button
+                                    onClick={() => {
+                                        setActiveTab(item.id);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className={`btn ${activeTab === item.id ? 'btn-primary' : 'btn-ghost'}`}
+                                    style={{
+                                        width: '100%',
+                                        justifyContent: 'flex-start',
+                                        backgroundColor: activeTab === item.id ? 'rgba(62, 207, 142, 0.1)' : 'transparent',
+                                        color: activeTab === item.id ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                                        fontWeight: activeTab === item.id ? 600 : 400
+                                    }}
+                                >
+                                    <item.icon size={16} /> {item.label}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-            {/* --- RIGHT CONTENT --- */}
-            <div className="docs-content">
-                {renderContent()}
-            </div>
+                {/* --- RIGHT CONTENT --- */}
+                <div className="docs-content">
+                    {renderContent()}
+                </div>
 
-            {/* --- RESPONSIVE STYLES --- */}
-            <style>{`
+                {/* --- RESPONSIVE STYLES --- */}
+                <style>{`
                 .docs-container {
                     display: flex;
                     gap: 3rem;
@@ -450,6 +453,9 @@ console.log("File URL:", result.url);
                     }
                 }
             `}</style>
-        </div>
+
+            </div>
+            <Footer />
+        </>
     );
 }

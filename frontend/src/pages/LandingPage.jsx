@@ -15,6 +15,9 @@ import {
     X     // Close Icon
 } from 'lucide-react';
 
+import Footer from '../components/Layout/Footer';
+
+
 function LandingPage() {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
@@ -259,6 +262,12 @@ function LandingPage() {
                     &copy; 2025 urBackend. Made for builders.
                 </div>
             </footer>
+            <footer style={{ padding: '6rem 2rem', textAlign: 'center', borderTop: '1px solid var(--color-border)' }}>
+                {/* ... Keep the CTA logic if you want ... */}
+            </footer>
+
+            {/* --- ADD NEW FOOTER HERE --- */}
+            <Footer />
 
             {/* --- RESPONSIVE CSS STYLES --- */}
             <style>{`
