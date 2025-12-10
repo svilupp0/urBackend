@@ -47,7 +47,17 @@ function Login() {
         } catch (err) {
             console.error(err);
             toast.dismiss(loadingToast);
-            const errorMessage = err.response?.data || 'Login failed. Check your credentials.';
+            const data = err.response?.data;
+            let errorMessage = 'Login failed. Check your credentials.';
+
+            if (data?.error) {
+                if (typeof data.error === 'string') {
+                    errorMessage = data.error;
+                } else if (Array.isArray(data.error)) {
+                    errorMessage = data.error[0]?.message || 'Validation failed';
+                }
+            }
+
             toast.error(errorMessage);
             setIsLoading(false);
         }

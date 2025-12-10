@@ -37,16 +37,27 @@ function Signup() {
             const response = await axios.post(`${API_URL}/api/auth/register`, formData);
 
             toast.dismiss(loadingToast);
-            toast.success(response.data); // "Registered successfully"
+            toast.success(response.data.message); // "Registered successfully"
 
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-                navigate('/login');
-            }, 1500);
+
+            navigate('/login');
 
         } catch (err) {
             toast.dismiss(loadingToast);
-            const errorMessage = err.response?.data || 'Signup failed. Please try again.';
+            const data = err.response?.data;
+            let errorMessage = 'Signup failed. Please try again.';
+
+            if (data?.error) {
+                if (typeof data.error === 'string') {
+                    errorMessage = data.error;
+                } else if (Array.isArray(data.error)) {
+                    // Handle Zod array
+                    errorMessage = data.error[0]?.message || 'Validation failed';
+                } else {
+                    errorMessage = JSON.stringify(data.error);
+                }
+            }
+
             toast.error(errorMessage);
         }
     };
