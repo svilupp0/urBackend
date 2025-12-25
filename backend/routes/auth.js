@@ -167,7 +167,7 @@ router.post('/verify-otp', async (req, res) => {
         await existingUser.save();
 
         // Generate new token with isVerified: true
-        const token = jwt.sign({ _id: existingUser._id, isVerified: true }, process.env.JWT_SECRET);
+        const token = jwt.sign({ _id: existingUser._id, isVerified: existingUser.isVerified }, process.env.JWT_SECRET);
 
         res.status(200).json({ message: "OTP verified successfully", token });
     } catch (err) {
