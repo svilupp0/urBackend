@@ -570,8 +570,36 @@ function LandingPage() {
                 </div>
             </div>
 
+            {/* --- USE CASES SECTION --- */}
+            <div id="use-cases" style={{ padding: '8rem 0', background: '#080808', borderTop: '1px solid #111', borderBottom: '1px solid #111' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+                        <h2 className="section-title">What can you build?</h2>
+                        <p className="section-desc">From simple prototypes to complex SaaS applications, urBackend scales with you.</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                        <div className="use-case-card">
+                            <Layers size={32} color="#3ECF8E" style={{ marginBottom: '1.5rem' }} />
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>SaaS Applications</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Handle multi-user auth, subscription data, and user profiles with ease. Secure rows by user ID automatically.</p>
+                        </div>
+                        <div className="use-case-card">
+                            <Smartphone size={32} color="#409EFF" style={{ marginBottom: '1.5rem' }} />
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Mobile Apps</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Perfect for React Native or Flutter apps needing a lightweight, JSON-based backend API.</p>
+                        </div>
+                        <div className="use-case-card">
+                            <GlobeIcon size={32} color="#FFBD2E" style={{ marginBottom: '1.5rem' }} />
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Portfolios & CMS</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Store blog posts, project details, and contact form submissions without setting up a WordPress server.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* --- FAQ SECTION --- */}
-            <div id="faq" style={{ padding: '8rem 0', background: '#080808', borderTop: '1px solid #111', borderBottom: '1px solid #111' }}>
+            <div id="faq" style={{ padding: '8rem 0', background: '#050505', borderTop: '1px solid #111' }}>
                 <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 1.5rem' }}>
                     <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
                         <h2 className="section-title">Frequently Asked Questions</h2>
