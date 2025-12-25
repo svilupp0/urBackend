@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import {
     Database,
     Shield,
@@ -27,13 +27,15 @@ import {
     ChevronDown,
     ChevronUp
 } from 'lucide-react';
-import Footer from '../components/Layout/Footer';
+import Footer from '../../components/Layout/Footer';
+import './style.css';
 
 function LandingPage() {
     const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
+    const [isNavVisible, setIsNavVisible] = useState(true);
+    const lastScrollY = useRef(0);
 
     // Simulated API Response State
     const [apiResponse, setApiResponse] = useState(null);
@@ -41,7 +43,21 @@ function LandingPage() {
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
     useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 20);
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            // Glass effect
+            setScrolled(currentScrollY > 20);
+
+            // Smart Nav Logic
+            if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+                setIsNavVisible(false); // Hide on scroll down
+            } else {
+                setIsNavVisible(true);  // Show on scroll up
+            }
+            lastScrollY.current = currentScrollY;
+        };
+
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
@@ -68,293 +84,31 @@ function LandingPage() {
 
     return (
         <div className="landing-page">
-            <style>{`
-                /* --- LANDING SPECIFIC STYLES --- */
-                .landing-page {
-                    background-color: #050505;
-                    color: #fff;
-                    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    overflow-x: hidden;
-                    letter-spacing: -0.01em;
-                }
 
-                /* GRID BACKGROUND */
-                .grid-bg {
-                    background-size: 40px 40px;
-                    background-image:
-                        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-                    mask-image: radial-gradient(circle at 50% 0%, black 40%, transparent 100%);
-                    position: absolute;
-                    top: 0; left: 0; right: 0; height: 120vh;
-                    z-index: 0;
-                    pointer-events: none;
-                }
-
-                /* NAVBAR */
-                .nav-glass {
-                    background: rgba(5, 5, 5, 0.8);
-                    backdrop-filter: blur(16px);
-                    border-bottom: 1px solid rgba(255,255,255,0.06);
-                    position: sticky;
-                    top: 0;
-                    z-index: 50;
-                    transition: all 0.3s ease;
-                }
-                .nav-container {
-                    max-width: 1200px;
-                    margin: 0 auto;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 1rem 1.5rem;
-                }
-
-                /* TEXT GRADIENTS & UTILS */
-                .text-gradient {
-                    background: linear-gradient(135deg, #fff 0%, #888 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
-                .text-gradient-primary {
-                    background: linear-gradient(135deg, #3ECF8E 0%, #34B27B 100%);
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
-                .section-title {
-                    font-size: 2.5rem;
-                    font-weight: 800;
-                    margin-bottom: 1.5rem;
-                    letter-spacing: -0.02em;
-                }
-                .section-desc {
-                    font-size: 1.1rem;
-                    color: #888;
-                    line-height: 1.6;
-                    max-width: 700px;
-                    margin: 0 auto;
-                }
-
-                /* HERO */
-                .hero-section {
-                    position: relative;
-                    padding-top: 8rem;
-                    padding-bottom: 8rem;
-                    z-index: 1;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                }
-
-                .hero-pill {
-                    background: rgba(62, 207, 142, 0.1);
-                    color: #3ECF8E;
-                    border: 1px solid rgba(62, 207, 142, 0.2);
-                    padding: 6px 16px;
-                    border-radius: 99px;
-                    font-size: 0.85rem;
-                    font-weight: 500;
-                    margin-bottom: 2rem;
-                    animation: fadeInDown 0.8s ease-out;
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                }
-
-                .hero-heading {
-                    font-size: 4.5rem;
-                    font-weight: 800;
-                    line-height: 1.05;
-                    letter-spacing: -0.03em;
-                    margin-bottom: 2rem;
-                    animation: fadeInUp 0.8s ease-out;
-                }
-
-                .hero-sub {
-                    font-size: 1.25rem;
-                    color: #999;
-                    max-width: 650px;
-                    line-height: 1.6;
-                    margin-bottom: 3rem;
-                    animation: fadeInUp 1s ease-out;
-                }
-
-                /* DEMO CONSOLE */
-                .demo-wrapper {
-                    margin-top: 5rem;
-                    width: 100%;
-                    max-width: 900px;
-                    background: #111;
-                    border: 1px solid #222;
-                    border-radius: 12px;
-                    box-shadow: 0 40px 80px -20px rgba(0,0,0,0.6);
-                    overflow: hidden;
-                    animation: fadeInUp 1.2s ease-out;
-                    position: relative;
-                }
-                
-                .demo-header {
-                    background: #161616;
-                    padding: 14px 20px;
-                    display: flex;
-                    align-items: center;
-                    border-bottom: 1px solid #222;
-                    gap: 1rem;
-                }
-                
-                .url-bar {
-                    flex: 1;
-                    background: #080808;
-                    color: #888;
-                    font-family: 'JetBrains Mono', monospace;
-                    padding: 8px 12px;
-                    border-radius: 6px;
-                    font-size: 0.85rem;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    border: 1px solid #222;
-                }
-
-                .demo-content {
-                    padding: 0;
-                    display: flex;
-                    flex-direction: column; 
-                }
-
-                @media(min-width: 768px) {
-                    .demo-content { flex-direction: row; height: 380px; }
-                    .demo-sidebar { width: 220px; border-right: 1px solid #222; }
-                    .demo-main { flex: 1; }
-                }
-
-                .demo-sidebar { background: #111; padding: 1.5rem; }
-                .demo-nav-item {
-                    display: flex; align-items: center; gap: 10px;
-                    color: #666; padding: 10px;
-                    border-radius: 6px; font-size: 0.9rem; font-weight: 500;
-                    margin-bottom: 4px; transition: all 0.2s;
-                    cursor: default;
-                }
-                .demo-nav-item.active { background: rgba(255,255,255,0.03); color: #fff; }
-
-                .demo-main {
-                    background: #0A0A0A;
-                    padding: 2rem;
-                    font-family: 'JetBrains Mono', monospace;
-                    position: relative;
-                    overflow: hidden;
-                }
-
-                .run-btn {
-                    position: absolute; top: 1.5rem; right: 1.5rem;
-                    background: var(--color-primary); color: #000;
-                    border: none; padding: 8px 16px; border-radius: 6px;
-                    font-weight: 600; font-size: 0.85rem; cursor: pointer;
-                    display: flex; align-items: center; gap: 6px; z-index: 10;
-                    box-shadow: 0 0 15px rgba(62, 207, 142, 0.3);
-                    transition: box-shadow 0.2s;
-                }
-                .run-btn:hover { box-shadow: 0 0 25px rgba(62, 207, 142, 0.5); }
-
-                /* HOW IT WORKS */
-                .step-card {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    text-align: center;
-                    padding: 2rem;
-                    background: #0E0E0E;
-                    border: 1px solid #1F1F1F;
-                    border-radius: 16px;
-                    position: relative;
-                }
-                .step-number {
-                    width: 40px; height: 40px;
-                    background: #1a1a1a;
-                    border: 1px solid #333;
-                    border-radius: 50%;
-                    display: flex; align-items: center; justify-content: center;
-                    font-weight: 700;
-                    margin-bottom: 1.5rem;
-                    color: #fff;
-                }
-
-                /* BENTO GRID */
-                .bento-grid {
-                    display: grid; grid-template-columns: repeat(12, 1fr); gap: 1.5rem;
-                    max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
-                }
-                
-                .bento-item {
-                    background: #0E0E0E;
-                    border: 1px solid #1F1F1F;
-                    border-radius: 16px; padding: 2.5rem;
-                    display: flex; flex-direction: column; justify-content: space-between;
-                    transition: all 0.3s;
-                }
-                .bento-item:hover { transform: translateY(-4px); border-color: #333; box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5); }
-
-                .bento-span-4 { grid-column: span 12; }
-                .bento-span-6 { grid-column: span 12; }
-                .bento-span-8 { grid-column: span 12; }
-
-                @media(min-width: 768px) {
-                    .bento-span-4 { grid-column: span 4; }
-                    .bento-span-6 { grid-column: span 6; }
-                    .bento-span-8 { grid-column: span 8; }
-                }
-
-                .bento-icon {
-                    width: 56px; height: 56px;
-                    background: rgba(255,255,255,0.03);
-                    border-radius: 14px;
-                    display: flex; align-items: center; justify-content: center;
-                    margin-bottom: 1.5rem; color: #fff;
-                    border: 1px solid rgba(255,255,255,0.05);
-                }
-                .bento-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.8rem; letter-spacing: -0.01em; }
-                .bento-desc { color: #999; font-size: 1rem; line-height: 1.6; }
-
-                /* USE CASES */
-                .use-case-card {
-                    background: #0A0A0A; border: 1px solid #1F1F1F; padding: 2rem; border-radius: 12px;
-                    text-align: left; transition: all 0.2s;
-                }
-                .use-case-card:hover { border-color: #333; background: #0F0F0F; }
-
-                /* FAQ */
-                .faq-item {
-                    border-bottom: 1px solid #222;
-                    margin-bottom: 1rem;
-                }
-                .faq-question {
-                    display: flex; justify-content: space-between; align-items: center;
-                    padding: 1.5rem 0; cursor: pointer;
-                    font-size: 1.1rem; font-weight: 500;
-                }
-                .faq-answer {
-                    padding-bottom: 1.5rem; color: #888; line-height: 1.6;
-                }
-
-                /* ANIMATIONS */
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-                @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-                
-                /* MOBILE ADJUSTMENTS */
-                @media(max-width: 768px) {
-                    .hero-heading { font-size: 2.8rem; }
-                    .nav-links { display: none; }
-                    .mobile-menu-btn { display: block; }
-                    .hero-section { padding-top: 5rem; }
-                }
-            `}</style>
 
             <div className="grid-bg"></div>
 
+            {/* --- MOBILE MENU OVERLAY --- */}
+            <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+                <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>How it Works</a>
+                <a href="#features" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>Features</a>
+                <a href="#use-cases" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>Use Cases</a>
+                <a href="#faq" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>FAQ</a>
+                <div style={{ height: '1px', width: '60px', background: '#333', margin: '10px 0' }}></div>
+                {isAuthenticated ? (
+                    <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ fontWeight: 600, width: '200px', padding: '12px' }}>
+                        Go to Console
+                    </button>
+                ) : (
+                    <>
+                        <Link to="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.2rem', fontWeight: 500, color: '#aaa', textDecoration: 'none' }}>Log in</Link>
+                        <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)} className="btn btn-primary" style={{ fontWeight: 600, padding: '12px 30px', width: '200px', textAlign: 'center' }}>Start for Free</Link>
+                    </>
+                )}
+            </div>
+
             {/* --- NAVBAR --- */}
-            <nav className="nav-glass">
+            <nav className={`nav-glass ${!isNavVisible ? 'nav-hidden' : ''}`}>
                 <div className="nav-container">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 800, fontSize: '1.2rem' }}>
                         <img src="/logo_u.png" alt="urBackend Logo" style={{ height: '32px', width: 'auto' }} />
@@ -389,7 +143,7 @@ function LandingPage() {
             {/* --- HERO SECTION --- */}
             <div className="hero-section">
                 <div className="hero-pill">
-                    <Zap size={14} fill="currentColor" /> Public Beta v1.0 is Live
+                    <Zap size={14} fill="currentColor" /> Public Alpha v1.1 is Live
                 </div>
 
                 <h1 className="hero-heading">
