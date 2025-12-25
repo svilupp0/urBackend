@@ -9,13 +9,8 @@ import {
     CheckCircle,
     Zap,
     Lock,
-    Layout,
     Menu,
     X,
-    Code,
-    Server,
-    Globe,
-    Play,
     Terminal,
     Box,
     Layers,
@@ -23,9 +18,9 @@ import {
     Globe as GlobeIcon,
     Cpu,
     Activity,
-    HelpCircle,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    Play
 } from 'lucide-react';
 import Footer from '../../components/Layout/Footer';
 import './style.css';
@@ -36,24 +31,36 @@ function LandingPage() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isNavVisible, setIsNavVisible] = useState(true);
     const lastScrollY = useRef(0);
+    const [scrolled, setScrolled] = useState(false);
 
-    // Simulated API Response State
     const [apiResponse, setApiResponse] = useState(null);
     const [isLoadingDemo, setIsLoadingDemo] = useState(false);
     const [openFaqIndex, setOpenFaqIndex] = useState(null);
 
+    const bigNumberStyle = {
+        position: 'absolute',
+        top: '-30px',
+        right: '-15px',
+        fontSize: '10rem',
+        fontWeight: 900,
+        color: 'rgba(255, 255, 255, 0.05)',
+        zIndex: 0,
+        lineHeight: 1,
+        pointerEvents: 'none',
+        userSelect: 'none'
+    };
+
+    const stepCardRelativeStyle = { position: 'relative', overflow: 'hidden', zIndex: 1 };
+
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY;
-
-            // Glass effect
             setScrolled(currentScrollY > 20);
 
-            // Smart Nav Logic
             if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
-                setIsNavVisible(false); // Hide on scroll down
+                setIsNavVisible(false);
             } else {
-                setIsNavVisible(true);  // Show on scroll up
+                setIsNavVisible(true);
             }
             lastScrollY.current = currentScrollY;
         };
@@ -84,11 +91,8 @@ function LandingPage() {
 
     return (
         <div className="landing-page">
-
-
             <div className="grid-bg"></div>
 
-            {/* --- MOBILE MENU OVERLAY --- */}
             <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
                 <a href="#how-it-works" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>How it Works</a>
                 <a href="#features" onClick={() => setIsMobileMenuOpen(false)} style={{ fontSize: '1.5rem', fontWeight: 700, color: '#fff', textDecoration: 'none' }}>Features</a>
@@ -107,8 +111,7 @@ function LandingPage() {
                 )}
             </div>
 
-            {/* --- NAVBAR --- */}
-            <nav className={`nav-glass ${!isNavVisible ? 'nav-hidden' : ''}`}>
+            <nav className={`nav-glass ${!isNavVisible ? 'nav-hidden' : ''} ${scrolled ? 'nav-scrolled' : ''}`}>
                 <div className="nav-container">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 800, fontSize: '1.2rem' }}>
                         <img src="/logo_u.png" alt="urBackend Logo" style={{ height: '32px', width: 'auto' }} />
@@ -125,7 +128,7 @@ function LandingPage() {
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         {isAuthenticated ? (
                             <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ fontWeight: 600 }}>
-                                Go to Console
+                                Console
                             </button>
                         ) : (
                             <>
@@ -140,31 +143,29 @@ function LandingPage() {
                 </div>
             </nav>
 
-            {/* --- HERO SECTION --- */}
             <div className="hero-section">
                 <div className="hero-pill">
-                    <Zap size={14} fill="currentColor" /> Public Alpha v1.1 is Live
+                    <Zap size={14} fill="currentColor" /> Public Alpha v1.1
                 </div>
 
                 <h1 className="hero-heading">
-                    Build your backend in seconds.<br />
-                    <span className="text-gradient-primary">The API for Frontend Devs.</span>
+                    Instant Backend.<br />
+                    <span className="text-gradient-primary">Just for Frontend Devs.</span>
                 </h1>
 
                 <p className="hero-sub">
-                    Stop writing boilerplate. Get a production-ready Database, Authentication, and Storage API in seconds. Focus on building your UI—we handle the infrastructure.
+                    No boilerplate. No servers. Get Database, Auth, and Storage APIs in seconds.
                 </p>
 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                     <Link to="/signup" className="btn btn-primary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '8px' }}>
-                        Start Building for Free <ArrowRight size={18} style={{ marginLeft: 6 }} />
+                        Start Building <ArrowRight size={18} style={{ marginLeft: 6 }} />
                     </Link>
                     <Link to="/docs" className="btn btn-secondary" style={{ padding: '1rem 2.5rem', fontSize: '1.05rem', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid #333' }}>
-                        Read Documentation
+                        Documentation
                     </Link>
                 </div>
 
-                {/* --- INTERACTIVE DEMO --- */}
                 <div id="demo" className="demo-wrapper">
                     <div className="demo-header">
                         <div style={{ display: 'flex', gap: '6px' }}>
@@ -202,7 +203,7 @@ function LandingPage() {
                             ) : (
                                 <div style={{ color: '#444', marginTop: '4rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
                                     <Terminal size={48} color="#333" />
-                                    <span>Hit "Send Request" to fetch live data from your API.</span>
+                                    <span>Hit "Send Request" to fetch live data.</span>
                                 </div>
                             )}
                         </div>
@@ -210,163 +211,153 @@ function LandingPage() {
                 </div>
             </div>
 
-            {/* --- HOW IT WORKS (From Legacy) --- */}
             <div id="how-it-works" style={{ padding: '6rem 0', background: '#080808', borderTop: '1px solid #111' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
                     <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-                        <h2 className="section-title">From Idea to API in 3 Steps</h2>
-                        <p className="section-desc">We've removed the complexity. You don't need to be a backend expert to ship a professional app.</p>
+                        <h2 className="section-title">Backend Architecture, Simplified.</h2>
+                        <p className="section-desc">We handle the complex infrastructure so you can ship professional apps faster.</p>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                        {/* Step 1 */}
-                        <div className="step-card">
-                            <div className="step-number">1</div>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>Create Project</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Initialize a new project environment. We instantly provision a dedicated database and storage bucket, isolated from everything else. No Docker, no Kubernetes.</p>
+                        <div className="step-card" style={stepCardRelativeStyle}>
+                            <div style={bigNumberStyle}>1</div>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', position: 'relative', zIndex: 2 }}>Init Project</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6, position: 'relative', zIndex: 2 }}>
+                                Instantly provision a dedicated, isolated backend environment.
+                                We set up your MongoDB cluster, Storage buckets, and API Gateway automatically.
+                            </p>
                         </div>
-                        {/* Step 2 */}
-                        <div className="step-card">
-                            <div className="step-number">2</div>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>Define Schema</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Use our Visual Table Builder to define your data structure. Add fields like String, Number, Boolean, or Date. We handle the Mongoose schemas behind the scenes.</p>
+                        <div className="step-card" style={stepCardRelativeStyle}>
+                            <div style={bigNumberStyle}>2</div>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', position: 'relative', zIndex: 2 }}>Design Schema</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6, position: 'relative', zIndex: 2 }}>
+                                Use our Visual Builder to model your data.
+                                We strictly validate your JSON Schema and handle complex relationships behind the scenes.
+                            </p>
                         </div>
-                        {/* Step 3 */}
-                        <div className="step-card">
-                            <div className="step-number">3</div>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>Fetch Data</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Your API is live immediately. Use standard HTTP methods (GET, POST, PUT, DELETE) to interact with your data. No deployments or restarts required.</p>
+                        <div className="step-card" style={stepCardRelativeStyle}>
+                            <div style={bigNumberStyle}>3</div>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', position: 'relative', zIndex: 2 }}>Connect API</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6, position: 'relative', zIndex: 2 }}>
+                                Your secure REST endpoints are live instantly.
+                                Connect from React, Vue, or Mobile apps using standard HTTP methods with low latency.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* --- FEATURES BENTO GRID (Detailed) --- */}
             <div id="features" style={{ padding: '8rem 0', background: '#050505' }}>
                 <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-                    <h2 className="section-title">Everything you need. <br /><span className="text-gradient">Nothing you don't.</span></h2>
-                    <p className="section-desc">Essential backend tools packaged into one unified developer console.</p>
+                    <h2 className="section-title">Complete Backend Suite</h2>
+                    <p className="section-desc">Enterprise-grade tools packaged for individual developers.</p>
                 </div>
 
                 <div className="bento-grid">
-                    {/* Item 1: Database (Detailed) */}
                     <div className="bento-item bento-span-8">
                         <div>
                             <div className="bento-icon" style={{ background: 'rgba(62, 207, 142, 0.1)', color: '#3ECF8E' }}>
                                 <Database />
                             </div>
-                            <h3 className="bento-title">Instant NoSQL Database</h3>
+                            <h3 className="bento-title">Managed NoSQL Database</h3>
                             <p className="bento-desc">
-                                Create flexible Collections (tables) without touching a command line.
-                                Our underlying engine uses <strong>MongoDB</strong> for high performance and scalability.
-                                Data is automatically served via RESTful endpoints.
+                                High-performance document storage powered by MongoDB.
+                                Scale from 10 to 10M records without managing servers.
                             </p>
                             <ul style={{ marginTop: '1rem', color: '#666', listStyle: 'none', padding: 0, display: 'grid', gap: '8px' }}>
-                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Validated JSON Schemas</li>
-                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Automatic ID & Timestamp Injection</li>
-                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Real-time Schema Updates</li>
+                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Strict Type Validation</li>
+                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Auto-generated API Endpoints</li>
+                                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} color="#3ECF8E" /> Real-time Indexing</li>
                             </ul>
-                        </div>
-                        <div style={{ marginTop: '2.5rem', background: '#000', padding: '1.5rem', borderRadius: '12px', border: '1px solid #222', fontSize: '0.85rem', color: '#aaa', fontFamily: 'JetBrains Mono, monospace' }}>
-                            <span style={{ color: '#c678dd' }}>axios</span>.post(<span style={{ color: '#98c379' }}>'/api/v1/posts'</span>, {`{`} <br />
-                            &nbsp;&nbsp;title: <span style={{ color: '#98c379' }}>'Hello World'</span>,<br />
-                            &nbsp;&nbsp;content: <span style={{ color: '#98c379' }}>'My first post'</span><br />
-                            {`}`});
                         </div>
                     </div>
 
-                    {/* Item 2: Auth (Detailed) */}
                     <div className="bento-item bento-span-4">
                         <div className="bento-icon" style={{ background: 'rgba(255, 189, 46, 0.1)', color: '#FFBD2E' }}>
                             <Shield />
                         </div>
-                        <h3 className="bento-title">Authentication Ready-to-go</h3>
+                        <h3 className="bento-title">Secure Auth</h3>
                         <p className="bento-desc">
-                            Secure your app with industry-standard <strong>JWT</strong> (JSON Web Tokens).
-                            We handle user registration, login, and password hashing using <strong>BCrypt</strong>.
+                            Full authentication flow with JWTs, BCrypt hashing, and session management built-in.
                         </p>
                         <div style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: '#888' }}>
-                            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> Secure Password Hashing</div>
-                            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={14} /> Session Management</div>
+                            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> Encrypted Passwords</div>
+                            <div style={{ marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={14} /> Role Based Access</div>
                         </div>
                     </div>
 
-                    {/* Item 3: Storage (Detailed) */}
                     <div className="bento-item bento-span-4">
                         <div className="bento-icon" style={{ background: 'rgba(64, 158, 255, 0.1)', color: '#409EFF' }}>
                             <HardDrive />
                         </div>
-                        <h3 className="bento-title">Cloud File Storage</h3>
+                        <h3 className="bento-title">Global Storage</h3>
                         <p className="bento-desc">
-                            Upload images, documents, and media via multipart form data.
-                            We provide instant <strong>Public CDN URLs</strong> so you can display assets immediately in your frontend.
+                            Upload and serve media assets via global CDN. Supports images, documents, and videos.
                         </p>
                     </div>
 
-                    {/* Item 4: DX (Large) */}
                     <div className="bento-item bento-span-8">
                         <div>
                             <div className="bento-icon" style={{ background: 'rgba(255, 95, 86, 0.1)', color: '#FF5F56' }}>
                                 <Cpu />
                             </div>
-                            <h3 className="bento-title">Lightning Fast & Secure</h3>
+                            <h3 className="bento-title">Serverless Architecture</h3>
                             <p className="bento-desc">
-                                Built on Node.js and optimized for speed. Every project runs in an isolated environment
-                                with strict API Key validation. Your data is yours.
+                                Built on modern Node.js clusters. We isolate your project to ensure
+                                consistent performance and security.
                             </p>
                         </div>
                         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>Zero-Config</span>
-                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>Framework Agnostic</span>
-                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>Scalable</span>
+                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>Auto-scaling</span>
+                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>DDoS Protection</span>
+                            <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>99.9% Uptime</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* --- USE CASES SECTION --- */}
             <div id="use-cases" style={{ padding: '8rem 0', background: '#080808', borderTop: '1px solid #111', borderBottom: '1px solid #111' }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
                     <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-                        <h2 className="section-title">What can you build?</h2>
-                        <p className="section-desc">From simple prototypes to complex SaaS applications, urBackend scales with you.</p>
+                        <h2 className="section-title">Build Anything.</h2>
+                        <p className="section-desc">Scalable infrastructure for every type of application.</p>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '6rem' }}>
                         <div className="use-case-card">
                             <Layers size={32} color="#3ECF8E" style={{ marginBottom: '1.5rem' }} />
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>SaaS Applications</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Handle multi-user auth, subscription data, and user profiles with ease. Secure rows by user ID automatically.</p>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>SaaS Platforms</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Handle complex data relationships, multi-tenant auth, and subscriptions securely.</p>
                         </div>
                         <div className="use-case-card">
                             <Smartphone size={32} color="#409EFF" style={{ marginBottom: '1.5rem' }} />
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Mobile Apps</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Perfect for React Native or Flutter apps needing a lightweight, JSON-based backend API.</p>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Mobile Backends</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Serve data to Flutter or React Native apps with lightweight, fast JSON responses.</p>
                         </div>
                         <div className="use-case-card">
                             <GlobeIcon size={32} color="#FFBD2E" style={{ marginBottom: '1.5rem' }} />
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Portfolios & CMS</h3>
-                            <p style={{ color: '#888', lineHeight: 1.6 }}>Store blog posts, project details, and contact form submissions without setting up a WordPress server.</p>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Content Sites</h3>
+                            <p style={{ color: '#888', lineHeight: 1.6 }}>Power blogs, portfolios, and e-commerce catalogs without CMS bloat.</p>
                         </div>
                     </div>
+
+
                 </div>
             </div>
 
-            {/* --- FAQ SECTION --- */}
             <div id="faq" style={{ padding: '8rem 0', background: '#050505', borderTop: '1px solid #111' }}>
                 <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 1.5rem' }}>
                     <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                        <h2 className="section-title">Frequently Asked Questions</h2>
-                        <p className="section-desc">Common questions about urBackend.</p>
+                        <h2 className="section-title">Common Questions</h2>
                     </div>
 
                     <div className="faq-list">
                         {[
-                            { q: "Is it really free?", a: "Yes, our Public Beta is completely free for early adopters. You can create unlimited projects and collections while we are in beta." },
-                            { q: "Can I use this with React/Vue/Angular?", a: "Absolutely. urBackend provides a standard REST API that works with ANY frontend framework, including React JS, Next.js, Vue, Angular, Svelte, and even mobile frameworks like Flutter and React Native." },
-                            { q: "How is this different from Firebase?", a: "Firebase is a proprietary platform with vendor lock-in. urBackend gives you a standard REST API that mimics a custom Node.js/Express backend, making it easier to migrate away if you ever need to." },
-                            { q: "Is my data secure?", a: "Yes. All data is encrypted at rest. API access is secured via API Keys, and user data is protected via JWT authentication." },
-                            { q: "Do I need to check for server maintenance?", a: "No. We handle all infrastructure, updates, and maintenance. You just focus on your code." }
+                            { q: "Is it really free?", a: "Yes, our Public Beta is free for developers. Create unlimited projects while we refine the platform." },
+                            { q: "Can I use this for production?", a: "While we are stable, we recommend urBackend for side-projects, hackathons, and MVPs initially." },
+                            { q: "Can I use this with React/Next.js?", a: "Yes. urBackend outputs standard REST APIs, so it works with any frontend framework. However, since the API Key grants write access, we recommend calling it from a server-side environment (like Next.js API routes) to keep your key secure." },
+                            { q: "How does it handle security?", a: "We use industry-standard encryption, automatic API key validation, and JWT for user sessions." },
+                            { q: "Can I export my data?", a: "Your data is yours. We provide simple JSON export tools if you ever decide to migrate." }
                         ].map((faq, index) => (
                             <div key={index} className="faq-item">
                                 <div className="faq-question" onClick={() => toggleFaq(index)}>
