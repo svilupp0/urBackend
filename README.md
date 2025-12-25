@@ -59,7 +59,7 @@ Start the server:
 
 ```bash
 npm start
-# Server will run on http://localhost:1234
+# Server will run on http://urbackend.bitbros.in
 ```
 
 ### 2. Frontend Setup
@@ -72,7 +72,7 @@ npm install
 Update `frontend/src/config.js` (if necessary):
 
 ```javascript
-export const API_URL = 'http://localhost:1234';
+export const API_URL = 'http://urbackend.bitbros.in';
 ```
 
 Start the client:
@@ -91,7 +91,7 @@ Once your project is created in the dashboard, use your **Public API Key** to ma
 **Insert Data:**
 
 ```javascript
-await fetch('http://localhost:1234/api/data/products', {
+await fetch('http://urbackend.bitbros.in/api/data/products', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ await fetch('http://localhost:1234/api/data/products', {
 **Fetch Data:**
 
 ```javascript
-const res = await fetch('http://localhost:1234/api/data/products', {
+const res = await fetch('http://urbackend.bitbros.in/api/data/products', {
   headers: { 'x-api-key': 'YOUR_API_KEY' }
 });
 const data = await res.json();
@@ -119,7 +119,7 @@ const data = await res.json();
 **Register User:**
 
 ```javascript
-await fetch('http://localhost:1234/api/userAuth/signup', {
+await fetch('http://urbackend.bitbros.in/api/userAuth/signup', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ await fetch('http://localhost:1234/api/userAuth/signup', {
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
 
-const res = await fetch('http://localhost:1234/api/storage/upload', {
+const res = await fetch('http://urbackend.bitbros.in/api/storage/upload', {
   method: 'POST',
   headers: { 'x-api-key': 'YOUR_API_KEY' },
   body: formData
