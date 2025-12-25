@@ -22,6 +22,8 @@ import Storage from './pages/Storage';
 import Docs from './pages/Docs';
 
 import Auth from './pages/Auth';
+import OtpVerification from './pages/OtpVerification';
+
 
 import Settings from './pages/Settings';
 
@@ -47,6 +49,8 @@ function App() {
 
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/verify-otp" element={<OtpVerification />} />
+
 
         {/* --- Protected Routes --- */}
         <Route path="/dashboard" element={

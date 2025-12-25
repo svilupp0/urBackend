@@ -8,7 +8,7 @@ import { API_URL } from '../config';
 
 export default function Storage() {
     const { projectId } = useParams();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
 
     const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,6 +39,11 @@ export default function Storage() {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (!user?.isVerified) {
+            toast.error("Account Verification Required. Please verify in Settings.");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
 
@@ -64,6 +69,10 @@ export default function Storage() {
 
     // 3. Handle Single Delete
     const handleDelete = async (path) => {
+        if (!user?.isVerified) {
+            toast.error("Account Verification Required.");
+            return;
+        }
         if (!confirm("Delete this file permanently?")) return;
 
         try {
@@ -80,6 +89,10 @@ export default function Storage() {
 
     // 4. Handle Delete ALL (New Feature)
     const handleDeleteAll = async () => {
+        if (!user?.isVerified) {
+            toast.error("Account Verification Required.");
+            return;
+        }
         const confirmMsg = prompt(`Type "DELETE" to confirm wiping all ${files.length} files.`);
         if (confirmMsg !== "DELETE") return;
 

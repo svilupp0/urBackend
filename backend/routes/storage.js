@@ -11,7 +11,7 @@ const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB Limit
 });
 
-// 1. UPLOAD FILE
+// UPLOAD FILE
 router.post('/upload', verifyApiKey, upload.single('file'), async (req, res) => {
     try {
         const file = req.file;
@@ -45,11 +45,11 @@ router.post('/upload', verifyApiKey, upload.single('file'), async (req, res) => 
         });
 
     } catch (err) {
-        res.status(500).json({ error: err.message }); // Fixed
+        res.status(500).json({ error: err.message });
     }
 });
 
-// 2. DELETE SINGLE FILE
+// DELETE SINGLE FILE
 router.delete('/file', verifyApiKey, async (req, res) => {
     try {
         const { path } = req.body;
@@ -67,11 +67,11 @@ router.delete('/file', verifyApiKey, async (req, res) => {
         res.json({ message: "File deleted successfully" });
 
     } catch (err) {
-        res.status(500).json({ error: err.message }); // Fixed
+        res.status(500).json({ error: err.message });
     }
 });
 
-// 3. DELETE ALL FILES
+// DELETE ALL FILES
 router.delete('/all', verifyApiKey, async (req, res) => {
     try {
         const project = req.project;

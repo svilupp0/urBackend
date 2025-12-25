@@ -6,24 +6,25 @@ const Project = require('../models/Project');
 const Log = require('../models/Log');
 const { z } = require('zod');
 const authMiddleware = require('../middleware/authMiddleware');
+const verifyEmail = require('../middleware/verifyEmail')
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
-// --- CONFIGURATION ---
+// CONFIGURATION
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB Limit
 
-// --- 🛡️ VALIDATION SCHEMAS ---
+// VALIDATION SCHEMAS
 
-// 1. Create Project Schema (Added this)
+// Create Project Schema
 const createProjectSchema = z.object({
     name: z.string().min(1, "Project name is required"),
     description: z.string().optional()
 });
 
-// 2. Create Collection Schema
+// Create Collection Schema
 const createCollectionSchema = z.object({
     projectId: z.string().min(1, "Project ID is required"),
     collectionName: z.string().min(1, "Collection Name is required"),
@@ -34,10 +35,10 @@ const createCollectionSchema = z.object({
     })).optional()
 });
 
-// --- ROUTES ---
+// ROUTES
 
-// 1. CREATE PROJECT
-router.post('/', authMiddleware, async (req, res) => {
+// CREATE PROJECT
+router.post('/', authMiddleware, verifyEmail, async (req, res) => {
     try {
         // Validation Applied
         const { name, description } = createProjectSchema.parse(req.body);
@@ -61,7 +62,7 @@ router.post('/', authMiddleware, async (req, res) => {
     }
 });
 
-// 2. GET ALL PROJECTS
+// GET ALL PROJECTS
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const projects = await Project.find({ owner: req.user._id }).select('-apiKey -jwtSecret');
@@ -71,7 +72,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-// 3. GET SINGLE PROJECT
+// GET SINGLE PROJECT
 router.get('/:projectId', authMiddleware, async (req, res) => {
     try {
         const project = await Project.findOne({ _id: req.params.projectId, owner: req.user._id }).select('-apiKey -jwtSecret');
@@ -86,7 +87,7 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
     }
 });
 
-// 4. REGENERATE API KEY
+// REGENERATE API KEY
 router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
     try {
         const newApiKey = uuidv4();
@@ -106,10 +107,9 @@ router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
     }
 });
 
-// 5. CREATE COLLECTION (Fixed Validation)
-router.post('/collection', authMiddleware, async (req, res) => {
+// CREATE COLLECTION (Fixed Validation)
+router.post('/collection', authMiddleware, verifyEmail, async (req, res) => {
     try {
-        // 🛡️ Fixed: Using Zod Schema here
         const { projectId, collectionName, schema } = createCollectionSchema.parse(req.body);
 
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
@@ -135,9 +135,9 @@ router.post('/collection', authMiddleware, async (req, res) => {
     }
 });
 
-// --- INTERNAL DATA ROUTES ---
+// INTERNAL DATA ROUTES
 
-// 6. GET DATA
+// GET DATA
 router.get('/:projectId/collections/:collectionName/data', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName } = req.params;
@@ -157,7 +157,7 @@ router.get('/:projectId/collections/:collectionName/data', authMiddleware, async
     }
 });
 
-// 7. DELETE ROW
+// DELETE ROW
 router.delete('/:projectId/collections/:collectionName/data/:id', authMiddleware, async (req, res) => {
     try {
         const { projectId, collectionName, id } = req.params;
@@ -182,9 +182,7 @@ router.delete('/:projectId/collections/:collectionName/data/:id', authMiddleware
     }
 });
 
-// --- INTERNAL STORAGE ROUTES ---
-
-// 8. LIST FILES
+// LIST FILES
 router.get('/:projectId/storage/files', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;
@@ -209,8 +207,8 @@ router.get('/:projectId/storage/files', authMiddleware, async (req, res) => {
     }
 });
 
-// 9. UPLOAD FILE
-router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'), async (req, res) => {
+// UPLOAD FILE
+router.post('/:projectId/storage/upload', authMiddleware, verifyEmail, upload.single('file'), async (req, res) => {
     try {
         const { projectId } = req.params;
         const file = req.file;
@@ -240,8 +238,8 @@ router.post('/:projectId/storage/upload', authMiddleware, upload.single('file'),
     }
 });
 
-// 10. DELETE FILE
-router.post('/:projectId/storage/delete', authMiddleware, async (req, res) => {
+// DELETE FILE
+router.post('/:projectId/storage/delete', authMiddleware, verifyEmail, async (req, res) => {
     try {
         const { projectId } = req.params;
         const { path } = req.body;
@@ -258,8 +256,8 @@ router.post('/:projectId/storage/delete', authMiddleware, async (req, res) => {
     }
 });
 
-// 11. DELETE PROJECT
-router.delete('/:projectId', authMiddleware, async (req, res) => {
+// DELETE PROJECT
+router.delete('/:projectId', authMiddleware, verifyEmail, async (req, res) => {
     try {
         const projectId = req.params.projectId;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
@@ -304,7 +302,7 @@ router.delete('/:projectId', authMiddleware, async (req, res) => {
     }
 });
 
-// 12. UPDATE PROJECT
+// UPDATE PROJECT
 router.patch('/:projectId', authMiddleware, async (req, res) => {
     try {
         const { name } = req.body;
@@ -320,8 +318,8 @@ router.patch('/:projectId', authMiddleware, async (req, res) => {
     }
 });
 
-// 13. INSERT DATA (Dashboard)
-router.post('/:projectId/collections/:collectionName/data', authMiddleware, async (req, res) => {
+// INSERT DATA (Dashboard)
+router.post('/:projectId/collections/:collectionName/data', authMiddleware, verifyEmail, async (req, res) => {
     try {
         const { projectId, collectionName } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
@@ -349,7 +347,7 @@ router.post('/:projectId/collections/:collectionName/data', authMiddleware, asyn
     }
 });
 
-// 14. DELETE ALL FILES
+// DELETE ALL FILES
 router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;
@@ -385,7 +383,7 @@ router.delete('/:projectId/storage/files', authMiddleware, async (req, res) => {
     }
 });
 
-// 15. ANALYTICS
+// ANALYTICS
 router.get('/:projectId/analytics', authMiddleware, async (req, res) => {
     try {
         const { projectId } = req.params;

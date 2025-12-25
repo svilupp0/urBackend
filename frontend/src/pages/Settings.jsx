@@ -2,7 +2,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Lock, Trash2, AlertTriangle, Save } from 'lucide-react';
+import { Lock, Trash2, AlertTriangle, Save, CheckCircle } from 'lucide-react';
 import { API_URL } from '../config';
 
 export default function Settings() {
@@ -60,6 +60,42 @@ export default function Settings() {
                 <div>
                     <h1 className="page-title">Settings</h1>
                     <p style={{ color: 'var(--color-text-muted)' }}>Manage your developer account preferences.</p>
+                </div>
+                {/* Verification Status Badge */}
+                <div style={{
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    backgroundColor: useAuth().user?.isVerified ? 'rgba(62, 207, 142, 0.1)' : 'rgba(255, 193, 7, 0.1)',
+                    border: `1px solid ${useAuth().user?.isVerified ? 'var(--color-success)' : 'var(--color-warning)'}`,
+                    color: useAuth().user?.isVerified ? 'var(--color-success)' : 'var(--color-warning)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontWeight: 500
+                }}>
+                    {useAuth().user?.isVerified ? (
+                        <>
+                            <CheckCircle size={16} /> Verified
+                        </>
+                    ) : (
+                        <>
+                            <AlertTriangle size={16} /> Unverified
+                            <button
+                                onClick={() => window.location.href = '/verify-otp'}
+                                style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    textDecoration: 'underline',
+                                    color: 'inherit',
+                                    cursor: 'pointer',
+                                    marginLeft: '5px',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                Verify Now
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 

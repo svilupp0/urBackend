@@ -13,11 +13,39 @@ function CreateProject() {
     const [loading, setLoading] = useState(false);
     const [newProject, setNewProject] = useState(null);
 
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user?.isVerified) {
+            toast.error(
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <span>Account Verification Required</span>
+                    <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                        Please verify your account in Settings first.
+                    </span>
+                    <button
+                        onClick={() => navigate('/settings')}
+                        style={{
+                            marginTop: '5px',
+                            background: '#fff',
+                            color: '#333',
+                            border: 'none',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Go to Settings
+                    </button>
+                </div>,
+                { duration: 5000 }
+            );
+            return;
+        }
+
         if (!name) return toast.error("Project Name is required");
 
         setLoading(true);

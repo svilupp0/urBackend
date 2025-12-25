@@ -6,13 +6,18 @@ const jwt = require('jsonwebtoken');
 const { z } = require('zod'); // Import Zod
 const verifyApiKey = require('../middleware/verifyApiKey');
 
-// --- SCHEMAS ---
+// SCHEMAS
 const authSchema = z.object({
-    email: z.string().email("Invalid email format"),
-    password: z.string().min(6, "Password must be at least 6 characters")
+    email: z.string()
+        .min(1, { message: "Email is required." }) // Ensure the input is not empty
+        .email({ message: "Invalid email format." })
+        .max(100, { message: "Email is too long." }),
+    password: z.string()
+        .min(6, { message: "Password must be at least 6 characters" })
+        .max(100, { message: "Password is too long." })
 });
 
-// 1. SIGNUP ROUTE
+// SIGNUP ROUTE
 router.post('/signup', verifyApiKey, async (req, res) => {
     try {
         const project = req.project;
@@ -57,7 +62,7 @@ router.post('/signup', verifyApiKey, async (req, res) => {
     }
 });
 
-// 2. LOGIN ROUTE
+// LOGIN ROUTE
 router.post('/login', verifyApiKey, async (req, res) => {
     try {
         const project = req.project;
@@ -86,7 +91,7 @@ router.post('/login', verifyApiKey, async (req, res) => {
     }
 });
 
-// 3. GET CURRENT USER
+// GET CURRENT USER
 router.get('/me', verifyApiKey, async (req, res) => {
     try {
         const project = req.project;
@@ -115,7 +120,7 @@ router.get('/me', verifyApiKey, async (req, res) => {
         }
 
     } catch (err) {
-        res.status(500).json({ error: err.message }); // Fixed
+        res.status(500).json({ error: err.message });
     }
 });
 

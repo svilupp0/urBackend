@@ -10,7 +10,7 @@ import { API_URL } from '../config';
 function CreateCollection() {
     const { projectId } = useParams();
     const navigate = useNavigate();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
 
     const [name, setName] = useState('');
     const [fields, setFields] = useState([
@@ -35,6 +35,12 @@ function CreateCollection() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!user?.isVerified) {
+            toast.error("Account Verification Required. Please verify in Settings.");
+            return;
+        }
+
         if (!name) return toast.error("Collection name is required");
         if (fields.some(f => !f.key)) return toast.error("All fields must have a name");
 

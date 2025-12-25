@@ -34,9 +34,20 @@ function Login() {
             const { token } = response.data;
             console.log("Login Success! Token:", token);
 
+            // Helper to decode JWT
+            const parseJwt = (token) => {
+                try {
+                    return JSON.parse(atob(token.split('.')[1]));
+                } catch (e) {
+                    return null;
+                }
+            };
+
+            const decoded = parseJwt(token);
+            const isVerified = decoded?.isVerified;
+
             // 3. Save Token & User via Context
-            // Abhi backend sirf token bhej raha hai, toh hum user data mein email khud se daal dete hain
-            login({ email: formData.email }, token);
+            login({ email: formData.email, isVerified }, token);
 
             toast.dismiss(loadingToast);
             toast.success("Welcome back!");

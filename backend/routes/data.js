@@ -63,7 +63,7 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         const safeData = sanitize(cleanData);
         Object.assign(cleanData, safeData);
 
-        // --- NEW: CHECK DB LIMIT ---
+        // CHECK DB LIMIT ---
         // Calculate approx size in bytes
         const docSize = Buffer.byteLength(JSON.stringify(cleanData));
 
@@ -76,7 +76,7 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
         const collection = mongoose.connection.db.collection(finalCollectionName);
         const result = await collection.insertOne(cleanData);
 
-        // --- NEW: UPDATE USAGE ---
+        // UPDATE USAGE ---
         currentProject.databaseUsed += docSize;
         await currentProject.save();
 
@@ -94,7 +94,7 @@ router.post('/:collectionName', verifyApiKey, async (req, res) => {
 
 
 // GET Route to fetch all data from a collection
-// Example: GET /api/data/products
+// GET /api/data/products
 router.get('/:collectionName', verifyApiKey, async (req, res) => {
     try {
         const { collectionName } = req.params;
@@ -124,7 +124,7 @@ router.get('/:collectionName', verifyApiKey, async (req, res) => {
 
 
 // GET Single Item by ID
-// Example: GET /api/data/products/69235c0cc8e73cd3d7bbeab8
+// GET /api/data/products/69235c0cc8e73cd3d7bbeab8
 router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
     try {
         const { collectionName, id } = req.params;
@@ -144,7 +144,7 @@ router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
         // Find document by _id
         const doc = await mongoose.connection.db
             .collection(finalCollectionName)
-            .findOne({ _id: new ObjectId(id) }); // ID convert karna zaroori hai
+            .findOne({ _id: new ObjectId(id) }); // ID Conversion is important
 
         if (!doc) {
             return res.status(404).send("Document not found.");
@@ -160,7 +160,7 @@ router.get('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
 
 // DELETE Single Item by ID
-// Example: DELETE /api/data/products/69235c0cc8e73cd3d7bbeab8
+// DELETE /api/data/products/69235c0cc8e73cd3d7bbeab8
 router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
     try {
         const { collectionName, id } = req.params;
@@ -172,13 +172,13 @@ router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
         const finalCollectionName = `${project._id}_${collectionName}`;
         const collection = mongoose.connection.db.collection(finalCollectionName);
 
-        // Pehle document dhoondo taaki size pata chale
+        // First find the document to know size
         const docToDelete = await collection.findOne({ _id: new ObjectId(id) });
 
         if (!docToDelete) return res.status(404).send("Document not found.");
 
         // Calculate size to subtract
-        // Note: _id field bhi count hota hai, approx size le rahe hain
+        // It also counts _id field
         const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
 
         // Delete
@@ -199,7 +199,7 @@ router.delete('/:collectionName/:id', verifyApiKey, async (req, res) => {
 
 
 // UPDATE Single Item by ID
-// Example: PUT /api/data/products/69235c0cc8e73cd3d7bbeab8
+// PUT /api/data/products/69235c0cc8e73cd3d7bbeab8
 router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
     try {
         const { collectionName, id } = req.params;
@@ -214,18 +214,18 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
                 collection: collectionName
             });
         }
-        // --- VALIDATION REPEAT (Zaroori hai) ---
+        // --- VALIDATION REPEAT (Important) ---
         const schemaRules = collectionConfig.model;
         for (const key in incomingData) {
             // 1. Check if field exists in schema
             const fieldRule = schemaRules.find(f => f.key === key);
             if (!fieldRule) {
-                // Optional: Aap chaho toh error de sakte ho agar unknown field aaye
-                // Abhi ke liye ignore karte hain ya error dete hain. Let's error for strictness.
+
+                // Not Found
                 return res.status(400).send(`Field '${key}' is not defined in the schema.`);
             }
 
-            // 2. Check Type
+            // Check Type
             if (fieldRule.type === 'Number' && typeof incomingData[key] !== 'number') {
                 return res.status(400).send(`Field '${key}' must be a Number.`);
             }
@@ -245,8 +245,8 @@ router.put('/:collectionName/:id', verifyApiKey, async (req, res) => {
         const result = await mongoose.connection.db
             .collection(finalCollectionName)
             .updateOne(
-                { _id: new ObjectId(id) }, // Kisko update karna hai
-                { $set: incomingData }     // Kya update karna hai ($set zaroori hai)
+                { _id: new ObjectId(id) },
+                { $set: incomingData }
             );
 
         if (result.matchedCount === 0) {

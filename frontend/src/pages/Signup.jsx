@@ -39,8 +39,11 @@ function Signup() {
             toast.dismiss(loadingToast);
             toast.success(response.data.message); // "Registered successfully"
 
+            // Trigger OTP send
+            await axios.post(`${API_URL}/api/auth/send-otp`, { email: formData.email });
 
-            navigate('/login');
+            toast.success("OTP Sent! Please verify your email.");
+            navigate('/verify-otp', { state: { email: formData.email } });
 
         } catch (err) {
             toast.dismiss(loadingToast);

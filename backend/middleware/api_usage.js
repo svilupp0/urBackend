@@ -1,7 +1,7 @@
 const rateLimit = require('express-rate-limit');
 const Log = require('../models/Log');
 
-// 1. Rate Limiter (Same as before)
+// Rate Limiter 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -10,17 +10,16 @@ const limiter = rateLimit({
     legacyHeaders: false,
 });
 
-// 2. Logger (UPDATED ✅)
+// Logger 
 const logger = (req, res, next) => {
     // Check for Data, Storage, AND UserAuth routes
     if (
         req.originalUrl.startsWith('/api/data') ||
         req.originalUrl.startsWith('/api/storage') ||
-        req.originalUrl.startsWith('/api/userAuth') // <--- Added this
+        req.originalUrl.startsWith('/api/userAuth')
     ) {
 
         res.on('finish', async () => {
-            // verifyApiKey middleware se 'req.project' set hona zaroori hai
             if (req.project) {
                 try {
                     await Log.create({

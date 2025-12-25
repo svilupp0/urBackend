@@ -5,7 +5,7 @@ const Developer = require('../models/Developer');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
-// --- SETUP ---
+// --- SETUP 
 beforeAll(async () => {
     // Connect to the TEST Database
     const uri = process.env.TEST_MONGO_URL;
@@ -23,7 +23,7 @@ afterAll(async () => {
 
 describe('Auth API Security', () => {
 
-    // Har test se pehle database saaf karein
+    // Clean DB bedore every test
     beforeEach(async () => {
         await Developer.deleteMany({}); // Clear old data
 
@@ -32,7 +32,7 @@ describe('Auth API Security', () => {
         await Developer.create({ email: 'test@example.com', password: hashedPassword });
     });
 
-    // Har test ke baad bhi safai (Optional but good)
+    // Clean DB after every test
     afterEach(async () => {
         await Developer.deleteMany({});
     });
@@ -53,15 +53,14 @@ describe('Auth API Security', () => {
         const res = await request(app)
             .post('/api/auth/login')
             .send({
-                email: { "$ne": null }, // 🚨 Attack Payload
+                email: { "$ne": null }, // Attack Payload
                 password: 'password123'
             });
 
-        // --- 🔍 DEBUGGING LOGS ---
+        // DEBUGGING LOGS 
         console.log("Status Code:", res.statusCode);
         console.log("Response Body:", res.body);
         console.log("Response Text:", res.text);
-        // -------------------------
 
         expect(res.statusCode).toBe(400);
         expect(res.body.error).toBeDefined();

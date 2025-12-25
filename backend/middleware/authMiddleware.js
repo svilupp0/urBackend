@@ -1,27 +1,36 @@
 const jwt = require('jsonwebtoken');
 
 module.exports = function (req, res, next) {
-    // 1. Poora header mangao
+    // Retrieve the Authorization header from the request
     const authHeader = req.header('Authorization');
 
-    // 2. Check karo header hai ya nahi
-    if (!authHeader) return res.status(401).send('Access Denied: No Token Provided');
+    // Check if the Authorization header exists
+    if (!authHeader) {
+        return res.status(401).send('Access Denied: No Token Provided');
+    }
 
-    // 3. "Bearer " ko hatakar asli token nikalo
-    // Hum space (' ') se split karte hain aur dusra hissa ([1]) uthate hain.
+    // Extract the actual token by removing the "Bearer " prefix
+    // We split the header value by space and take the second part
     const token = authHeader.split(' ')[1];
 
-    // Agar split karne ke baad token nahi mila (matlab format galat tha)
-    if (!token) return res.status(401).send('Access Denied: Malformed Token Format');
+    // If token is missing after splitting, the format is invalid
+    if (!token) {
+        return res.status(401).send('Access Denied: Malformed Token Format');
+    }
 
     try {
+        // Verify the token using the secret key
         const verified = jwt.verify(token, process.env.JWT_SECRET);
+
+        // Attach decoded token data to request object
         req.user = verified;
+
+        // Proceed to the next middleware or route handler
         next();
     } catch (err) {
-        console.log(err);
-        // Error message mein 'err' object bhejna security risk ho sakta hai production mein, 
-        // isliye sirf message bhejte hain.
+        console.error(err);
+
+        // Do not expose detailed error information in production
         res.status(400).send('Invalid Token');
     }
 };

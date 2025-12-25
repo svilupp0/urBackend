@@ -8,8 +8,8 @@ const logSchema = new mongoose.Schema({
     ip: String,
     timestamp: { type: Date, default: Date.now }
 }, {
-    // ⚠️ IMPORTANT: Capped Collection
-    // Max size: 50MB (52428800 bytes) ya Max 50,000 logs. Jo pehle poora ho jaye.
+    // IMPORTANT: Capped Collection
+    // Max size: 50MB (52428800 bytes)
     capped: { size: 52428800, max: 50000 }
 });
 
