@@ -35,7 +35,7 @@ app.use('/api/storage', verifyApiKey, logger, storageRoute);
 
 // Test Route
 app.get('/', (req, res) => {
-    res.send("urBackend API is running 🚀");
+    res.status(200).json({status: "success", message: "urBackend API is running 🚀"})
 });
 
 // 🛡️ FAULT TOLERANCE: Global Error Handler
