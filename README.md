@@ -13,6 +13,12 @@ Stop writing boilerplate. Get an instant Database, Authentication, and Storage A
 - **🛠️ Visual Schema Builder**: Define table columns (String, Number, Boolean, Date) through an intuitive UI.
 - **🔒 Security**: API Key-based access control and Row Level Security.
 
+> [!IMPORTANT]
+> **Security Warning**: Your `x-api-key` grants **Admin Access** (Read/Write/Delete).
+>
+> - ❌ **NEVER** use this key in client-side code (frontend).
+> - ✅ **ONLY** use this key in secure server-side environments.
+
 ## 🛠️ Tech Stack
 
 ### Frontend
@@ -59,7 +65,7 @@ Start the server:
 
 ```bash
 npm start
-# Server will run on http://urbackend.bitbros.in
+# Server will run on https://api.urbackend.bitbros.in
 ```
 
 ### 2. Frontend Setup
@@ -72,7 +78,7 @@ npm install
 Update `frontend/src/config.js` (if necessary):
 
 ```javascript
-export const API_URL = 'http://urbackend.bitbros.in';
+export const API_URL = 'https://api.urbackend.bitbros.in';
 ```
 
 Start the client:
@@ -86,12 +92,76 @@ npm run dev
 
 Once your project is created in the dashboard, use your **Public API Key** to make requests.
 
-### 1. Database API
+### Base URL
+
+```
+https://api.urbackend.bitbros.in
+```
+
+### 1. Authentication
+
+**Sign Up User:**
+
+```javascript
+await fetch('https://api.urbackend.bitbros.in/api/userAuth/signup', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    email: "user@example.com",
+    password: "securePassword123",
+    name: "John Doe" // Optional
+  })
+});
+```
+
+**Login User:**
+
+```javascript
+const res = await fetch('https://api.urbackend.bitbros.in/api/userAuth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    email: "user@example.com",
+    password: "securePassword123"
+  })
+});
+const data = await res.json(); // Returns { token: "JWT_TOKEN", user: {...} }
+```
+
+**Get Profile (Me):**
+
+```javascript
+await fetch('https://api.urbackend.bitbros.in/api/userAuth/me', {
+  method: 'GET',
+  headers: {
+    'x-api-key': 'YOUR_API_KEY',
+    'Authorization': 'Bearer <USER_TOKEN>' // From login response
+  }
+});
+```
+
+### 2. Database API
+
+**Get All Items:**
+
+```javascript
+// Replace :collectionName with your actual collection name (e.g., 'products')
+const res = await fetch('https://api.urbackend.bitbros.in/api/data/products', {
+  headers: { 'x-api-key': 'YOUR_API_KEY' }
+});
+const data = await res.json();
+```
 
 **Insert Data:**
 
 ```javascript
-await fetch('http://urbackend.bitbros.in/api/data/products', {
+await fetch('https://api.urbackend.bitbros.in/api/data/products', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -105,30 +175,30 @@ await fetch('http://urbackend.bitbros.in/api/data/products', {
 });
 ```
 
-**Fetch Data:**
+**Get / Update / Delete by ID:**
 
 ```javascript
-const res = await fetch('http://urbackend.bitbros.in/api/data/products', {
+const id = "DOCUMENT_ID"; // The '_id' from the document
+
+// Get One
+await fetch(`https://api.urbackend.bitbros.in/api/data/products/${id}`, {
   headers: { 'x-api-key': 'YOUR_API_KEY' }
 });
-const data = await res.json();
-```
 
-### 2. Authentication API
-
-**Register User:**
-
-```javascript
-await fetch('http://urbackend.bitbros.in/api/userAuth/signup', {
-  method: 'POST',
+// Update
+await fetch(`https://api.urbackend.bitbros.in/api/data/products/${id}`, {
+  method: 'PUT',
   headers: {
     'Content-Type': 'application/json',
     'x-api-key': 'YOUR_API_KEY'
   },
-  body: JSON.stringify({
-    email: "user@example.com",
-    password: "securePassword123"
-  })
+  body: JSON.stringify({ price: 1199 })
+});
+
+// Delete
+await fetch(`https://api.urbackend.bitbros.in/api/data/products/${id}`, {
+  method: 'DELETE',
+  headers: { 'x-api-key': 'YOUR_API_KEY' }
 });
 ```
 
@@ -140,19 +210,36 @@ await fetch('http://urbackend.bitbros.in/api/userAuth/signup', {
 const formData = new FormData();
 formData.append('file', fileInput.files[0]);
 
-const res = await fetch('http://urbackend.bitbros.in/api/storage/upload', {
+const res = await fetch('https://api.urbackend.bitbros.in/api/storage/upload', {
   method: 'POST',
   headers: { 'x-api-key': 'YOUR_API_KEY' },
   body: formData
 });
-// Returns { url: "..." }
+const data = await res.json();
+// Returns { url: "...", path: "project_id/filename.jpg" }
+```
+
+**Delete File:**
+
+```javascript
+await fetch('https://api.urbackend.bitbros.in/api/storage/file', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': 'YOUR_API_KEY'
+  },
+  body: JSON.stringify({
+    path: "PROJECT_ID/filename.jpg" // The 'path' from upload response
+  })
+});
 ```
 
 ## ⚠️ Limits & Quotas
 
 - **Rate Limit**: 100 requests / 15 mins per IP.
-- **Database Size**: Max 50MB per project.
-- **File Storage**: Max 100MB per project (5MB max per file).
+- **Database Size**: Max 50 MB per project.
+- **File Storage**: Max 100 MB per project.
+- **File Upload Size**: Max 5 MB per file.
 
 ## 🤝 Contributing
 
