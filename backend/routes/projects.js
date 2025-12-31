@@ -8,6 +8,7 @@ const { z } = require('zod');
 const authMiddleware = require('../middleware/authMiddleware');
 const verifyEmail = require('../middleware/verifyEmail')
 const { v4: uuidv4 } = require('uuid');
+const { generateApiKey, hashApiKey } = require('../utils/api');
 const multer = require('multer');
 const { createClient } = require('@supabase/supabase-js');
 
@@ -43,19 +44,25 @@ router.post('/', authMiddleware, verifyEmail, async (req, res) => {
         // Validation Applied
         const { name, description } = createProjectSchema.parse(req.body);
 
+        const rawApiKey = generateApiKey()
+        const hashedkey = hashApiKey(rawApiKey);
+
+        const rawSecret = generateApiKey()
+
         const newProject = new Project({
             name,
             description,
             owner: req.user._id,
-            apiKey: uuidv4(),
-            jwtSecret: uuidv4()
+            apiKey: hashedkey,
+            jwtSecret: rawSecret
         });
         await newProject.save();
 
         const projectObj = newProject.toObject();
+        projectObj.apiKey = rawApiKey;
         delete projectObj.jwtSecret;
 
-        res.status(201).json(projectObj); // Fixed: .json()
+        res.status(201).json(projectObj);
     } catch (err) {
         if (err instanceof z.ZodError) return res.status(400).json({ error: err.errors });
         res.status(500).json({ error: err.message }); // Fixed: .json()

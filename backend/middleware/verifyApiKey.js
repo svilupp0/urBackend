@@ -1,4 +1,5 @@
 const Project = require('../models/Project');
+const { hashApiKey } = require('../utils/api');
 
 module.exports = async (req, res, next) => {
     try {
@@ -6,7 +7,10 @@ module.exports = async (req, res, next) => {
 
         if (!apiKey) return res.status(401).json({ error: 'API key not found' });
 
-        const project = await Project.findOne({ apiKey })
+        const hashedApi = hashApiKey(apiKey);
+        
+
+        const project = await Project.findOne({ apiKey: hashedApi })
             .populate('owner', 'isVerified');
         if (!project) return res.status(401).json({ error: 'Invalid API key' });
 
