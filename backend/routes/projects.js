@@ -97,10 +97,12 @@ router.get('/:projectId', authMiddleware, async (req, res) => {
 // REGENERATE API KEY
 router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
     try {
-        const newApiKey = uuidv4();
+        const newApiKey = generateApiKey();
+        const hashed = hashApiKey(newApiKey);
+
         const project = await Project.findOneAndUpdate(
             { _id: req.params.projectId, owner: req.user._id },
-            { $set: { apiKey: newApiKey } },
+            { $set: { apiKey: hashed } },
             { new: true }
         );
         if (!project) return res.status(404).json({ error: "Project not found." });
@@ -108,7 +110,7 @@ router.patch('/:projectId/regenerate-key', authMiddleware, async (req, res) => {
         const projectObj = project.toObject();
         delete projectObj.apiKey;
         delete projectObj.jwtSecret;
-        res.json({ apiKey: project.apiKey, project: projectObj });
+        res.json({ apiKey: newApiKey, project: projectObj });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

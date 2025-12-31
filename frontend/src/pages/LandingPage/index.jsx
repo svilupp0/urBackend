@@ -174,7 +174,7 @@ function LandingPage() {
                             <div className="dot green" style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f' }}></div>
                         </div>
                         <div className="url-bar">
-                            <span style={{ color: '#fff' }}>https://api.urbackend.com/v1/users</span>
+                            <span style={{ color: '#fff' }}>https://api.urbackend.bitbros.in/v1/users</span>
                             <span style={{ fontSize: '0.75rem', color: '#666', border: '1px solid #333', padding: '2px 6px', borderRadius: 4 }}>GET</span>
                         </div>
                     </div>
