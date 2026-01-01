@@ -15,10 +15,12 @@ function generateApiKey() {
 
 //api hashing
 function hashApiKey(apikey) {
-    return crypto
-        .createHmac("sha256", "ikewdxnuuencwoi")
-        .update(apikey)
-        .digest("hex");
+    // scrypt hashing: fast but brute focre resistant
+    // 'salt' को .env में रखना बेहतर है
+    const salt = process.env.API_KEY_SALT;
+
+    // generate a derived key of 64 bytes
+    return crypto.scryptSync(apikey, salt, 64).toString('hex');
 }
 
 module.exports = { generateApiKey, hashApiKey }
