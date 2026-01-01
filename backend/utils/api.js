@@ -13,6 +13,7 @@ function generateApiKey() {
 
 }
 
+//api hashing
 function hashApiKey(apikey) {
     return crypto
         .createHmac("sha256", "ikewdxnuuencwoi")

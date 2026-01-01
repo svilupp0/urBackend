@@ -15,6 +15,10 @@ const loginSchema = z.object({
     password: z.string().min(6, "Password must be at least 6 characters")
 });
 
+const onlyEmailSchema = z.object({
+    email: z.string().email("Invalid email format")
+});
+
 const changePasswordSchema = z.object({
     currentPassword: z.string().min(1, "Current password is required"),
     newPassword: z.string().min(6, "New password must be at least 6 characters")
@@ -123,14 +127,14 @@ router.delete('/delete-account', authorization, async (req, res) => {
 
 router.post('/send-otp', async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email } = onlyEmailSchema.parse(req.body);
         const otp = Math.floor(100000 + Math.random() * 900000);
         const existingUser = await Developer.findOne({ email });
         if (!existingUser) return res.status(400).json({ error: "User not found" });
 
         if (existingUser.isVerified) return res.status(400).json({ error: "User already verified" });
 
-        const existingOtp = await otpSchema.findOne({ email });
+        const existingOtp = await otpSchema.findOne({ userId: existingUser._id });
         if (existingOtp) {
             await existingOtp.remove();
         }
@@ -151,7 +155,8 @@ router.post('/send-otp', async (req, res) => {
 
 router.post('/verify-otp', async (req, res) => {
     try {
-        const { email, otp } = req.body;
+        const { email } = onlyEmailSchema.parse(req.body);
+        const { otp } = req.body;
         const existingUser = await Developer.findOne({ email }).sort({ createdAt: -1 });
         if (!existingUser) return res.status(400).json({ error: "User not found" });
 
