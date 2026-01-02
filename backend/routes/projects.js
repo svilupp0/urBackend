@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
 const verifyEmail = require('../middleware/verifyEmail')
+const multer = require('multer');
+const storage = multer.memoryStorage();
 
 const {
     createProject,
@@ -15,11 +17,13 @@ const {
     uploadFile,
     listFiles,
     deleteFile,
+    deleteAllFiles,
     deleteProject,
     updateProject,
     analytics
 } = require("../controllers/project.controller")
 
+const upload = multer({ storage: storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB Limit
 
 
 // ROUTES

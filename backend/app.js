@@ -10,9 +10,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- IMPORTS ---
+
+const adminWhitelist = ['http://localhost:5173', 'https://urbackend.bitbros.in'];
+
+const adminCorsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl)
+        if (!origin || adminWhitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS for Admin access'));
+        }
+    },
+    credentials: true
+};
+
+
+// IMPORTS 
 const { limiter, logger } = require('./middleware/api_usage');
-const verifyApiKey = require('./middleware/verifyApiKey');
 
 // Route Imports
 const authRoute = require('./routes/auth');
@@ -21,7 +36,7 @@ const dataRoute = require('./routes/data');
 const userAuthRoute = require('./routes/userAuth');
 const storageRoute = require('./routes/storage');
 
-// --- ROUTES SETUP ---
+// ROUTES SETUP 
 app.use('/api/', limiter); // Rate Limiter
 app.use('/api/auth', authRoute); // Developer Auth
 app.use('/api/projects', projectRoute); // Project Mgmt
@@ -30,12 +45,12 @@ app.use('/api/projects', projectRoute); // Project Mgmt
 app.use('/api/userAuth', logger, userAuthRoute);
 
 // Data & Storage Routes (Protected)
-app.use('/api/data', verifyApiKey, logger, dataRoute);
-app.use('/api/storage', verifyApiKey, logger, storageRoute);
+app.use('/api/data', cors(adminCorsOptions), logger, dataRoute);
+app.use('/api/storage', cors(adminCorsOptions), logger, storageRoute);
 
 // Test Route
 app.get('/', (req, res) => {
-    res.status(200).json({status: "success", message: "urBackend API is running 🚀"})
+    res.status(200).json({ status: "success", message: "urBackend API is running 🚀" })
 });
 
 // 🛡️ FAULT TOLERANCE: Global Error Handler
@@ -47,7 +62,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-// --- 🛡️ DB CONNECTION & SERVER START ---
+// 🛡️ DB CONNECTION & SERVER START 
 // (Only connect if NOT in Test Mode)
 if (process.env.NODE_ENV !== 'test') {
 

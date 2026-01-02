@@ -1,7 +1,7 @@
 const { sanitize } = require("../utils/input.validation")
 const { ObjectId } = require('mongodb');
 const mongoose = require('mongoose');
-const Project = requrie("../models/Project");
+const Project = require("../models/Project");
 
 module.exports.insertData = async (req, res) => {
     try {
