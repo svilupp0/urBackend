@@ -3,6 +3,7 @@ const Project = require("../models/Project")
 const { createProjectSchema, createCollectionSchema } = require('../utils/input.validation');
 const { generateApiKey, hashApiKey } = require('../utils/api');
 const { z } = require('zod');
+const { encrypt, decrypt } = require('../utils/encryption');
 
 
 
@@ -88,6 +89,43 @@ module.exports.regenerateApiKey = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 }
+
+module.exports.updateExternalConfig = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { dbUri, storageUrl, storageKey, storageProvider } = req.body;
+
+
+        if (!dbUri || !storageUrl || !storageKey) {
+            return res.status(400).json({ error: "All external configuration fields are required." });
+        }
+
+
+        const configData = JSON.stringify({
+            dbUri,
+            storageUrl,
+            storageKey,
+            storageProvider,
+        });
+
+        const encryptedConfig = encrypt(configData);
+
+
+
+        const project = await Project.findOneAndUpdate(
+            { _id: projectId, owner: req.user._id },
+            { $set: { externalConfig: encryptedConfig, isExternal: true } },
+            { new: true }
+        );
+        if (!project) return res.status(404).json({ error: "Project not found." });
+
+
+        res.status(200).json({ message: "External config updated successfully." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 
 module.exports.createCollection = async (req, res) => {
     try {
