@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 const dotenv = require('dotenv');
 const app = express();
+const GC = require('./utils/GC');
 dotenv.config();
 
 // Middleware

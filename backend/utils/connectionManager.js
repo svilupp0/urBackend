@@ -1,13 +1,15 @@
-const registry = new Map();
+const registry = require("./registry");
 const Project = require("../models/Project");
 const { decrypt } = require("./encryption");
 const mongoose = require("mongoose");
 
 
 async function getConnection(projectId) {
-    if (registry.has(projectId)) {
-        const cachedConn = registry.get(projectId);
+    const key = projectId.toString();
+    if (registry.has(key)) {
+        const cachedConn = registry.get(key);
         if (cachedConn.readyState === 1) {
+            cachedConn.lastAccessed = new Date();
             return cachedConn;
         }
     }
@@ -39,12 +41,14 @@ async function getConnection(projectId) {
     });
 
     connection.on("close", () => {
-        registry.delete(projectId);
-        console.log(`DB connection closed for project ${projectId}`);
+        registry.delete(key);
+        console.log(`DB connection closed for project ${key}`);
     });
 
 
-    registry.set(projectId, connection);
+    connection.lastAccessed = new Date();
+    registry.set(key, connection);
+
     return connection;
 }
 
