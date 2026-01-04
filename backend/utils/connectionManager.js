@@ -17,7 +17,9 @@ async function getConnection(projectId) {
     const projectDoc = await Project.findById(projectId)
         .select("+externalConfig.iv +externalConfig.tag +externalConfig.encrypted");
     if (!projectDoc) throw new Error("Project not found");
-    if (!projectDoc.isExternal) throw new Error("Project is not external");
+    if (!projectDoc.isExternal) {
+        return mongoose.connection;
+    }
 
     let config;
     try {

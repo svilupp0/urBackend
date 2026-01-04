@@ -22,8 +22,17 @@ function buildMongooseSchema(fieldsArray) {
 }
 
 
-function getCompiledModel(connection, collectionData) {
-    const collectionName = collectionData.name;
+function getCompiledModel(connection, collectionData, projectId, isExternal) {
+
+    let collectionName = "";
+
+    if (!isExternal) {
+        collectionName = `${projectId}_${collectionData.name}`
+    } else {
+        collectionName = collectionData.name;
+
+    }
+
 
     // 1. Get per-connection cache
     if (!modelRegistry.has(connection)) {

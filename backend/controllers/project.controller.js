@@ -3,8 +3,9 @@ const Project = require("../models/Project")
 const { createProjectSchema, createCollectionSchema } = require('../utils/input.validation');
 const { generateApiKey, hashApiKey } = require('../utils/api');
 const { z } = require('zod');
-const { encrypt, decrypt } = require('../utils/encryption');
-
+const { encrypt } = require('../utils/encryption');
+const { getConnection } = require("../utils/connectionManager");
+const { getCompiledModel } = require("../utils/injectModel")
 
 
 // CONFIGURATION
@@ -161,12 +162,27 @@ module.exports.getData = async (req, res) => {
         if (!project) return res.status(404).json({ error: "Project not found." });
 
         const finalCollectionName = `${project._id}_${collectionName}`;
-        const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
 
-        let data = [];
-        if (collectionsList.length > 0) {
-            data = await mongoose.connection.db.collection(finalCollectionName).find({}).limit(50).toArray();
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) {
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
         }
+
+        const connection = await getConnection(projectId);
+        const model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+
+        // const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
+
+        const data = await model.find({}).limit(50);
+
+        //        let data = [];
+        // if (collectionsList.length > 0) {
+        //     data = await mongoose.connection.db.collection(finalCollectionName).find({}).limit(50).toArray();
+        // }
+
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -182,11 +198,13 @@ module.exports.insertData = async (req, res) => {
         const finalCollectionName = `${project._id}_${collectionName}`;
         const incomingData = req.body;
         const docSize = Buffer.byteLength(JSON.stringify(incomingData));
-        const limit = project.databaseLimit || 50 * 1024 * 1024;
+        const limit = project.databaseLimit || 20 * 1024 * 1024;
 
         if ((project.databaseUsed || 0) + docSize > limit) {
             return res.status(403).json({ error: "Database limit exceeded. Delete some data." });
         }
+
+
 
         const result = await mongoose.connection.db
             .collection(finalCollectionName)
