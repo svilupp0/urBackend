@@ -57,7 +57,8 @@ function CreateProject() {
             setNewProject(res.data);
             toast.success("Project Created!");
         } catch (err) {
-            toast.error(err.response?.data || "Failed to create project");
+            const errorMsg = err.response?.data?.error || err.response?.data?.message || "Failed to create project";
+            toast.error(typeof errorMsg === 'object' ? "Validation Error" : errorMsg);
         } finally {
             setLoading(false);
         }
