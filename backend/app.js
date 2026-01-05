@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const cors = require('cors')
 const dotenv = require('dotenv');
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 const GC = require('./utils/GC');
 dotenv.config();
 
