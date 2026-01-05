@@ -2,15 +2,16 @@ import { useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // 1. Import Auth Context
+import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
+import { Code, Terminal } from 'lucide-react';
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
-    const { login } = useAuth(); // 2. Get login function
+    const { login } = useAuth();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -27,14 +28,11 @@ function Login() {
         const loadingToast = toast.loading('Logging in...');
 
         try {
-            // Note: Ngrok se access karte waqt localhost API shayad issue kare agar device alag ho.
-            // Lekin agar same PC par browser hai to chalega.
             const response = await axios.post(`${API_URL}/api/auth/login`, formData);
 
             const { token } = response.data;
             console.log("Login Success! Token:", token);
 
-            // Helper to decode JWT
             const parseJwt = (token) => {
                 try {
                     return JSON.parse(atob(token.split('.')[1]));
@@ -46,13 +44,11 @@ function Login() {
             const decoded = parseJwt(token);
             const isVerified = decoded?.isVerified;
 
-            // 3. Save Token & User via Context
             login({ email: formData.email, isVerified }, token);
 
             toast.dismiss(loadingToast);
             toast.success("Welcome back!");
 
-            // Redirect to Dashboard
             navigate('/dashboard');
 
         } catch (err) {
@@ -74,58 +70,98 @@ function Login() {
         }
     };
 
-    // --- STYLES ---
-    const containerStyle = {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        padding: '1rem'
-    };
-
-    const formBoxStyle = { width: '100%', maxWidth: '400px' };
-
     return (
-        <div style={containerStyle}>
-            <div className="card" style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem', fontWeight: 600 }}>
-                    Developer Login
-                </h2>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            padding: '1rem',
+            background: 'radial-gradient(circle at top center, #1a1a1a 0%, #000000 100%)'
+        }}>
+            <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '12px',
+                        background: 'linear-gradient(135deg, var(--color-primary), #059669)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 1.5rem auto',
+                        boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                    }}>
+                        <Terminal size={28} color="#000" />
+                    </div>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
+                        Welcome Back
+                    </h2>
+                    <p style={{ color: 'var(--color-text-muted)' }}>
+                        Sign in to your dashboard
+                    </p>
+                </div>
+
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label className="form-label">Email</label>
+                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Email Address</label>
                         <input
                             type="email"
                             name="email"
                             className="input-field"
-                            placeholder="Email Address"
+                            placeholder="name@example.com"
                             onChange={handleChange}
                             required
+                            style={{
+                                padding: '12px',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
+                                color: '#fff'
+                            }}
                         />
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">Password</label>
+                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <label className="form-label" style={{ marginBottom: 0, fontSize: '0.9rem' }}>Password</label>
+                        </div>
                         <input
                             type="password"
                             name="password"
                             className="input-field"
-                            placeholder="Password"
+                            placeholder="••••••••"
                             onChange={handleChange}
                             required
+                            style={{
+                                padding: '12px',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
+                                color: '#fff'
+                            }}
                         />
                     </div>
+
                     <button
                         type="submit"
                         className="btn btn-primary"
-                        style={{ width: '100%', marginTop: '10px' }}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            justifyContent: 'center',
+                            marginTop: '0.5rem'
+                        }}
                         disabled={isLoading}
                     >
-                        {isLoading ? 'Logging In...' : 'Log In'}
+                        {isLoading ? 'Authenticating...' : 'Sign In'}
                     </button>
                 </form>
-                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                    Don't have an account? <Link to="/signup" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Sign up</Link>
-                </p>
+
+                <div style={{ marginTop: '2rem', textAlign: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+                        Don't have an account? <Link to="/signup" style={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none' }}>Create Account</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

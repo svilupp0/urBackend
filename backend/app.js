@@ -54,16 +54,22 @@ app.get('/', (req, res) => {
     res.status(200).json({ status: "success", message: "urBackend API is running 🚀" })
 });
 
-// 🛡️ FAULT TOLERANCE: Global Error Handler
+//  FAULT TOLERANCE: Global Error Handler
 app.use((err, req, res, next) => {
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({
+            error: "Invalid JSON format",
+            message: "Check your request body syntax. Stray characters outside the JSON object are not allowed."
+        });
+    }
+
     console.error("🔥 Unhandled Error:", err.stack);
     res.status(500).json({
         error: "Something went wrong!",
         message: err.message
     });
 });
-
-// 🛡️ DB CONNECTION & SERVER START 
+//  DB CONNECTION & SERVER START 
 // (Only connect if NOT in Test Mode)
 if (process.env.NODE_ENV !== 'test') {
 
