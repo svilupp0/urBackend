@@ -20,6 +20,7 @@ const {
     deleteAllFiles,
     deleteProject,
     updateProject,
+    updateExternalConfig,
     analytics
 } = require("../controllers/project.controller")
 
@@ -64,6 +65,9 @@ router.delete('/:projectId', authMiddleware, verifyEmail, deleteProject);
 
 // UPDATE PROJECT
 router.patch('/:projectId', authMiddleware, updateProject);
+
+// UPDATE EXTERNAL CONFIG
+router.patch('/:projectId/byod-config', authMiddleware, updateExternalConfig);
 
 // INSERT DATA (Dashboard)
 router.post('/:projectId/collections/:collectionName/data', authMiddleware, verifyEmail, insertData);

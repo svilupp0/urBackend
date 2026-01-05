@@ -32,7 +32,7 @@ export default function Dashboard() {
 
     // Inline Styles for Cards to match Landing Page aesthetic
     const cardStyle = {
-        background: 'rgba(255, 255, 255, 0.02)',
+        background: 'var(--color-bg-card)',
         border: '1px solid var(--color-border)',
         borderRadius: '12px',
         padding: '1.5rem',
@@ -51,57 +51,66 @@ export default function Dashboard() {
     );
 
     return (
-        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
+        <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '4rem' }}>
 
             {/* Header Section */}
-            <div className="page-header" style={{ marginBottom: '3rem', borderBottom: 'none' }}>
+            <div className="page-header" style={{ marginBottom: '3rem', borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
-                    <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Overview</h1>
-                    <p style={{ color: 'var(--color-text-muted)' }}>
+                    <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Overview</h1>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '1rem' }}>
                         Welcome back! Here's what's happening with your projects.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/create-project')}
                     className="btn btn-primary"
-                    style={{ padding: '0.75rem 1.5rem', gap: '8px', boxShadow: '0 4px 14px 0 rgba(0,0,0,0.3)' }}
+                    style={{ padding: '0.75rem 1.5rem', gap: '8px', boxShadow: '0 4px 14px 0 rgba(62, 207, 142, 0.3)' }}
                 >
                     <Plus size={18} /> New Project
                 </button>
             </div>
 
-            {/* Stats Row (Static for now, makes it look dashboard-y) */}
+            {/* Stats Row */}
             {projects.length > 0 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                    <div style={cardStyle}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
+                    <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Total Projects</span>
-                            <Folder size={20} color="var(--color-primary)" />
+                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>Total Projects</span>
+                            <div style={{ background: 'rgba(62, 207, 142, 0.1)', padding: '8px', borderRadius: '8px', color: 'var(--color-primary)' }}>
+                                <Folder size={20} />
+                            </div>
                         </div>
-                        <div style={{ fontSize: '1.8rem', fontWeight: 700 }}>{projects.length}</div>
+                        <div style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em' }}>{projects.length}</div>
                     </div>
-                    <div style={cardStyle}>
+                    <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>System Status</span>
-                            <Activity size={20} color="#3ECF8E" />
+                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>System Status</span>
+                            <div style={{ background: 'rgba(62, 207, 142, 0.1)', padding: '8px', borderRadius: '8px', color: 'var(--color-primary)' }}>
+                                <Activity size={20} />
+                            </div>
                         </div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#3ECF8E', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#3ECF8E', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <span style={{ display: 'block', width: '8px', height: '8px', borderRadius: '50%', background: '#3ECF8E', boxShadow: '0 0 10px #3ECF8E' }}></span>
                             Operational
                         </div>
                     </div>
-                    <div style={cardStyle}>
+                    <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>API Usage</span>
-                            <Zap size={20} color="#FFBD2E" />
+                            <span style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>Current Plan</span>
+                            <div style={{ background: 'rgba(255, 189, 46, 0.1)', padding: '8px', borderRadius: '8px', color: '#FFBD2E' }}>
+                                <Zap size={20} />
+                            </div>
                         </div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#fff' }}>Free Tier</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#ededed' }}>Free Tier</div>
                     </div>
                 </div>
             )}
 
             {/* Projects Grid */}
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1.5rem', color: 'var(--color-text-main)' }}>Your Projects</h2>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text-main)', letterSpacing: '-0.01em' }}>Your Projects</h2>
+                <div style={{ height: '1px', flex: 1, background: 'var(--color-border)' }}></div>
+            </div>
 
             {projects.length === 0 ? (
                 <div style={{
@@ -109,30 +118,32 @@ export default function Dashboard() {
                     textAlign: 'center',
                     padding: '6rem 2rem',
                     alignItems: 'center',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%)',
-                    borderStyle: 'dashed'
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0) 100%)',
+                    borderStyle: 'dashed',
+                    maxWidth: '600px',
+                    margin: '0 auto'
                 }}>
                     <div style={{
                         width: '64px', height: '64px', borderRadius: '50%',
-                        background: 'rgba(255,255,255,0.05)', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem'
+                        background: 'var(--color-bg-input)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem',
+                        border: '1px solid var(--color-border)'
                     }}>
                         <Server size={32} color="var(--color-text-muted)" />
                     </div>
                     <h3 style={{ marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: 600 }}>No projects yet</h3>
-                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', maxWidth: '400px' }}>
-                        Create your first backend project to start building APIs, Databases, and Storage buckets instantly.
+                    <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem', maxWidth: '400px', lineHeight: '1.6' }}>
+                        Get started by creating your first project. You'll get instant access to a database, authentication, and storage.
                     </p>
                     <button
                         onClick={() => navigate('/create-project')}
-                        className="btn btn-secondary"
-                        style={{ background: '#fff', color: '#000', fontWeight: 600 }}
+                        className="btn btn-primary"
                     >
                         Create Project
                     </button>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
                     {projects.map((project) => (
                         <Link
                             to={`/project/${project._id}`}
@@ -141,22 +152,23 @@ export default function Dashboard() {
                             style={{ textDecoration: 'none' }}
                         >
                             <div className="dashboard-card" style={cardStyle}>
-                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
                                     <div style={{
-                                        padding: '12px',
-                                        borderRadius: '10px',
-                                        background: 'linear-gradient(135deg, rgba(62, 207, 142, 0.15), rgba(62, 207, 142, 0.05))',
+                                        width: '48px', height: '48px',
+                                        borderRadius: '12px',
+                                        background: 'linear-gradient(135deg, rgba(62, 207, 142, 0.1), rgba(0,0,0,0))',
                                         color: '#3ECF8E',
-                                        border: '1px solid rgba(62, 207, 142, 0.2)'
+                                        border: '1px solid rgba(62, 207, 142, 0.1)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
                                     }}>
                                         <Database size={24} />
                                     </div>
-                                    <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', color: '#888', border: '1px solid var(--color-border)' }}>
-                                        v1.0.0
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '4px 10px', borderRadius: '20px', background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
+                                        ACTIVE
                                     </span>
                                 </div>
 
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--color-text-main)', marginBottom: '8px' }}>
+                                <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--color-text-main)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
                                     {project.name}
                                 </h3>
 
@@ -171,26 +183,26 @@ export default function Dashboard() {
                                     WebkitBoxOrient: 'vertical',
                                     overflow: 'hidden'
                                 }}>
-                                    {project.description || "A scalable backend project."}
+                                    {project.description || "A scalable backend project with database and auth."}
                                 </p>
 
                                 <div style={{
-                                    borderTop: '1px solid rgba(255,255,255,0.05)',
-                                    paddingTop: '1rem',
+                                    borderTop: '1px solid var(--color-border)',
+                                    paddingTop: '1.2rem',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '12px',
+                                    gap: '16px',
                                     color: 'var(--color-text-muted)',
-                                    fontSize: '0.8rem'
+                                    fontSize: '0.85rem'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Database size={14} /> <span>DB</span>
+                                        <Database size={16} /> <span>Postgres</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <HardDrive size={14} /> <span>Storage</span>
+                                        <HardDrive size={16} /> <span>50MB</span>
                                     </div>
-                                    <div style={{ marginLeft: 'auto', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                                        Open <ArrowRight size={14} />
+                                    <div style={{ marginLeft: 'auto', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, fontSize: '0.8rem' }}>
+                                        View Project <ArrowRight size={14} />
                                     </div>
                                 </div>
                             </div>
@@ -209,10 +221,11 @@ export default function Dashboard() {
                             alignItems: 'center',
                             cursor: 'pointer',
                             color: 'var(--color-text-muted)',
-                            minHeight: '240px'
+                            minHeight: '260px',
+                            transition: 'all 0.2s'
                         }}
                     >
-                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '16px', borderRadius: '50%', marginBottom: '1rem' }}>
+                        <div style={{ background: 'var(--color-bg-input)', padding: '16px', borderRadius: '50%', marginBottom: '1rem', border: '1px solid var(--color-border)' }}>
                             <Plus size={24} />
                         </div>
                         <span style={{ fontWeight: 600 }}>Create New Project</span>
@@ -223,14 +236,14 @@ export default function Dashboard() {
             <style>{`
                 .dashboard-card:hover {
                     transform: translateY(-4px);
-                    border-color: var(--color-primary) !important;
-                    background: rgba(255,255,255,0.04) !important;
-                    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+                    border-color: var(--color-border-hover) !important;
+                    background: var(--color-bg-input) !important;
+                    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
                 }
                 .dashboard-card-add:hover {
                     border-color: var(--color-primary) !important;
                     color: var(--color-primary) !important;
-                    background: rgba(62, 207, 142, 0.02) !important;
+                    background: rgba(62, 207, 142, 0.03) !important;
                 }
                 .spinner {
                     width: 20px;

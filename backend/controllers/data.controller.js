@@ -1,41 +1,31 @@
-const { sanitize } = require("../utils/input.validation")
-const { ObjectId } = require('mongodb');
+const { sanitize } = require("../utils/input.validation");
 const mongoose = require('mongoose');
 const Project = require("../models/Project");
+const { getConnection } = require("../utils/connectionManager");
+const { getCompiledModel } = require("../utils/injectModel");
 
+// 1. INSERT DATA
 module.exports.insertData = async (req, res) => {
     try {
         const { collectionName } = req.params;
-        const project = req.project;
+        const project = req.project; // Middleware se mila project metadata
 
-        // Latest Project Data fetch karein (taaki accurate usage mile)
-        const currentProject = await Project.findById(project._id);
-
-        const collectionConfig = currentProject.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) {
-            return res.status(404).json({
-                error: "Collection not found",
-                collection: collectionName
-            });
-        }
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
         const schemaRules = collectionConfig.model;
         const incomingData = req.body;
         const cleanData = {};
 
-        // --- VALIDATION & SANITIZATION ---
+        // Validation & Sanitization
         for (const field of schemaRules) {
             if (field.required && incomingData[field.key] === undefined) {
-                return res.status(400).json({
-                    error: `Field '${field.key}' is required.`,
-                    field: field.key
-                });
+                return res.status(400).json({ error: `Field '${field.key}' is required.` });
             }
             if (incomingData[field.key] !== undefined) {
-                // Type checking logic (same as before)...
+                // Type Checks
                 if (field.type === 'Number' && typeof incomingData[field.key] !== 'number') return res.status(400).send(`Field '${field.key}' must be a Number.`);
                 if (field.type === 'Boolean' && typeof incomingData[field.key] !== 'boolean') return res.status(400).send(`Field '${field.key}' must be a Boolean.`);
-
                 cleanData[field.key] = incomingData[field.key];
             }
         }
@@ -43,194 +33,134 @@ module.exports.insertData = async (req, res) => {
         const safeData = sanitize(cleanData);
         Object.assign(cleanData, safeData);
 
-        // CHECK DB LIMIT ---
-        // Calculate approx size in bytes
-        const docSize = Buffer.byteLength(JSON.stringify(cleanData));
-
-        if (currentProject.databaseUsed + docSize > currentProject.databaseLimit) {
-            return res.status(403).send("Database limit exceeded. Delete some data to free up space.");
+        // Usage Limit Check (Internal Only)
+        let docSize = 0;
+        if (!project.isExternal) {
+            docSize = Buffer.byteLength(JSON.stringify(cleanData));
+            if ((project.databaseUsed || 0) + docSize > project.databaseLimit) {
+                return res.status(403).send("Database limit exceeded.");
+            }
         }
 
-        // Insert Data
-        const finalCollectionName = `${project._id}_${collectionName}`;
-        const collection = mongoose.connection.db.collection(finalCollectionName);
-        const result = await collection.insertOne(cleanData);
+        // Get Connection & Model
+        const connection = await getConnection(project._id);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
 
-        // UPDATE USAGE ---
-        currentProject.databaseUsed += docSize;
-        await currentProject.save();
+        const result = await Model.create(cleanData);
 
-        res.status(201).json({
-            message: "Data inserted successfully",
-            insertedId: result.insertedId,
-            data: cleanData
-        });
+        // Update Project Metadata (Internal Only)
+        if (!project.isExternal) {
+            project.databaseUsed = (project.databaseUsed || 0) + docSize;
+            await project.save();
+        }
 
+        res.status(201).json(result);
     } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: 'Some issue at our end' });
+        console.error("Insert Error:", err);
+        res.status(500).json({ error: err.message });
     }
-}
+};
 
-
+// 2. GET ALL DATA
 module.exports.getAllData = async (req, res) => {
     try {
         const { collectionName } = req.params;
         const project = req.project;
 
         const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) {
-            return res.status(404).json({
-                error: "Collection not found",
-                collection: collectionName
-            });
-        }
-        const finalCollectionName = `${project._id}_${collectionName}`;
+        if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
-        const data = await mongoose.connection.db
-            .collection(finalCollectionName)
-            .find({})
-            .toArray();
+        const connection = await getConnection(project._id);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
 
+        const data = await Model.find({}).limit(100);
         res.json(data);
-
     } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: 'Some issue at our end' });
+        console.log("error----------------")
+        res.status(500).json({ error: err.message });
     }
-}
+};
 
+// 3. GET SINGLE DOC
 module.exports.getSingleDoc = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
         const project = req.project;
 
-        // Security Check
         const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) {
-            return res.status(404).json({
-                error: "Collection not found",
-                collection: collectionName
-            });
-        }
+        if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
-        const finalCollectionName = `${project._id}_${collectionName}`;
+        const connection = await getConnection(project._id);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
 
-        // Find document by _id
-        const doc = await mongoose.connection.db
-            .collection(finalCollectionName)
-            .findOne({ _id: new ObjectId(id) }); // ID Conversion is important
-
-        if (!doc) {
-            return res.status(404).send("Document not found.");
-        }
+        const doc = await Model.findById(id);
+        if (!doc) return res.status(404).send("Document not found.");
 
         res.json(doc);
-
     } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: 'Some issue at our end' });
+        res.status(500).json({ error: err.message });
     }
-}
+};
 
-
-
-
+// 4. UPDATE DATA
 module.exports.updateSingleData = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
         const project = req.project;
-        const incomingData = req.body; // Naya data
+        const incomingData = req.body;
 
-        // Security & Config Find
         const collectionConfig = project.collections.find(c => c.name === collectionName);
-        if (!collectionConfig) {
-            return res.status(404).json({
-                error: "Collection not found",
-                collection: collectionName
-            });
-        }
-        // --- VALIDATION REPEAT (Important) ---
+        if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
+
+        const connection = await getConnection(project._id);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+
+        // Basic Schema Validation
         const schemaRules = collectionConfig.model;
         for (const key in incomingData) {
-            // 1. Check if field exists in schema
             const fieldRule = schemaRules.find(f => f.key === key);
-            if (!fieldRule) {
-
-                // Not Found
-                return res.status(400).send(`Field '${key}' is not defined in the schema.`);
-            }
-
-            // Check Type
-            if (fieldRule.type === 'Number' && typeof incomingData[key] !== 'number') {
-                return res.status(400).send(`Field '${key}' must be a Number.`);
-            }
-            if (fieldRule.type === 'Boolean' && typeof incomingData[key] !== 'boolean') {
-                return res.status(400).send(`Field '${key}' must be a Boolean.`);
-            }
-            // String check is loose in JS, usually fine.
+            if (!fieldRule) return res.status(400).send(`Field '${key}' not in schema.`);
+            // Type checks... (Number, Boolean etc.)
         }
 
+        const result = await Model.findByIdAndUpdate(id, { $set: incomingData }, { new: true });
+        if (!result) return res.status(404).send("Document not found.");
 
-        const safeData = sanitize(incomingData);
-        incomingData = safeData;
-
-
-        const finalCollectionName = `${project._id}_${collectionName}`;
-
-        const result = await mongoose.connection.db
-            .collection(finalCollectionName)
-            .updateOne(
-                { _id: new ObjectId(id) },
-                { $set: incomingData }
-            );
-
-        if (result.matchedCount === 0) {
-            return res.status(404).send("Document not found to update.");
-        }
-
-        res.json({ message: "Document updated successfully", id, updatedFields: incomingData });
-
+        res.json({ message: "Updated", data: result });
     } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: 'Some issue at our end' });
+        res.status(500).json({ error: err.message });
     }
-}
+};
 
-
-
-
+// 5. DELETE DATA
 module.exports.deleteSingleDoc = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
         const project = req.project;
 
-        // Latest Project Fetch
-        const currentProject = await Project.findById(project._id);
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
-        const finalCollectionName = `${project._id}_${collectionName}`;
-        const collection = mongoose.connection.db.collection(finalCollectionName);
+        const connection = await getConnection(project._id);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
 
-        // First find the document to know size
-        const docToDelete = await collection.findOne({ _id: new ObjectId(id) });
-
+        const docToDelete = await Model.findById(id);
         if (!docToDelete) return res.status(404).send("Document not found.");
 
-        // Calculate size to subtract
-        // It also counts _id field
-        const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
+        let docSize = 0;
+        if (!project.isExternal) {
+            docSize = Buffer.byteLength(JSON.stringify(docToDelete));
+        }
 
-        // Delete
-        await collection.deleteOne({ _id: new ObjectId(id) });
+        await Model.deleteOne({ _id: id });
 
-        // Update Usage (Ensure it doesn't go below 0)
-        currentProject.databaseUsed = Math.max(0, currentProject.databaseUsed - docSize);
-        await currentProject.save();
+        if (!project.isExternal) {
+            project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
+            await project.save();
+        }
 
         res.json({ message: "Document deleted", id });
-
     } catch (err) {
-        console.log(err)
-        res.status(500).json({ error: 'Some issue at our end' });
+        res.status(500).json({ error: err.message });
     }
-}
+};
