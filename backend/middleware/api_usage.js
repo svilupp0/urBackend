@@ -9,6 +9,7 @@ const limiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     validate: { xForwardedForHeader: false },
+    validate: { trustProxy: false }
 });
 
 // Logger 

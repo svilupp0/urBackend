@@ -29,10 +29,7 @@ async function getConnection(projectId) {
         throw new Error("Invalid or corrupted external config");
     }
 
-    const connection = mongoose.createConnection(config.dbUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    });
+    const connection = mongoose.createConnection(config.dbUri);
 
     connection.on("connected", () => {
         console.log(`DB connected for project ${projectId}`);
