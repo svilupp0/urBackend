@@ -57,23 +57,13 @@ function ProjectDetails() {
         toast.success("Copied to clipboard!");
     };
 
-    // Shared Styles
-    const cardStyle = {
-        background: 'rgba(255, 255, 255, 0.02)',
-        border: '1px solid var(--color-border)',
-        borderRadius: '12px',
-        padding: '1.5rem',
-        height: '100%',
-        position: 'relative'
-    };
-
     if (loading) return (
         <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--color-text-muted)', gap: '10px' }}>
             <div className="spinner"></div> Loading project...
         </div>
     );
 
-    if (!project) return <div className="container">Project not found</div>;
+    if (!project) return <div className="container" style={{ padding: '4rem', textAlign: 'center' }}>Project not found</div>;
 
     return (
         <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
@@ -86,7 +76,7 @@ function ProjectDetails() {
                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                     backdropFilter: 'blur(5px)'
                 }}>
-                    <div className="card" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--color-primary)', background: '#0a0a0a', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
+                    <div className="card" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--color-primary)', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}>
                         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                             <div style={{ width: '50px', height: '50px', background: 'rgba(62, 207, 142, 0.1)', color: 'var(--color-primary)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem auto' }}>
                                 <Key size={24} />
@@ -100,8 +90,8 @@ function ProjectDetails() {
                             <code style={{
                                 display: 'block',
                                 padding: '1rem',
-                                background: '#111',
-                                border: '1px solid #333',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
                                 borderRadius: '8px',
                                 color: '#3ECF8E',
                                 fontFamily: 'monospace',
@@ -126,23 +116,23 @@ function ProjectDetails() {
             )}
 
             {/* --- HEADER --- */}
-            <div className="page-header" style={{ marginBottom: '2.5rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '2rem' }}>
+            <div className="page-header" style={{ marginBottom: '3rem', borderBottom: 'none' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <Server size={24} color="#fff" />
+                        <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(62, 207, 142, 0.1), rgba(0,0,0,0))', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(62, 207, 142, 0.1)' }}>
+                            <Server size={28} color="#3ECF8E" />
                         </div>
                         <div>
-                            <h1 className="page-title" style={{ fontSize: '1.8rem', marginBottom: '6px' }}>{project.name}</h1>
+                            <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '4px', letterSpacing: '-0.02em' }}>{project.name}</h1>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.85rem' }}>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3ECF8E', background: 'rgba(62, 207, 142, 0.1)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#3ECF8E', background: 'rgba(62, 207, 142, 0.1)', padding: '4px 10px', borderRadius: '20px', fontWeight: 600, border: '1px solid rgba(62, 207, 142, 0.1)' }}>
                                     <span style={{ width: 6, height: 6, background: 'currentColor', borderRadius: '50%' }}></span> Active
                                 </span>
                                 <span style={{ color: 'var(--color-text-muted)' }}>ID: {project._id}</span>
                             </div>
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+                    <div>
                         <button onClick={() => navigate(`/project/${projectId}/settings`)} className="btn btn-secondary">
                             Project Settings
                         </button>
@@ -154,20 +144,20 @@ function ProjectDetails() {
 
                 {/* --- API CONFIGURATION --- */}
                 <div style={{ order: 1 }}>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <ShieldCheck size={20} color="var(--color-primary)" /> Connect
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-main)' }}>
+                        <ShieldCheck size={20} color="var(--color-primary)" /> API Config
                     </h3>
-                    <div style={cardStyle}>
+                    <div className="card">
                         <div style={{ marginBottom: '2rem' }}>
                             <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '8px', fontWeight: 500 }}>
                                 API Endpoint
                             </label>
-                            <div className="input-group" style={{ display: 'flex', background: '#000', borderRadius: '6px', border: '1px solid #333', overflow: 'hidden' }}>
-                                <div style={{ padding: '10px 14px', color: '#888', background: '#111', borderRight: '1px solid #333', fontSize: '0.9rem', userSelect: 'none' }}>POST</div>
+                            <div className="input-group" style={{ display: 'flex', background: 'var(--color-bg-input)', borderRadius: '6px', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+                                <div style={{ padding: '10px 14px', color: '#666', borderRight: '1px solid var(--color-border)', fontSize: '0.9rem', userSelect: 'none', background: 'rgba(255,255,255,0.02)' }}>POST</div>
                                 <input
                                     readOnly
                                     value={`${API_URL}/api/data/{collection}`}
-                                    style={{ flex: 1, background: 'transparent', border: 'none', color: '#ccc', padding: '10px', fontFamily: 'monospace', fontSize: '0.9rem', outline: 'none' }}
+                                    style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--color-text-main)', padding: '10px', fontFamily: 'monospace', fontSize: '0.9rem', outline: 'none' }}
                                 />
                                 <button onClick={() => copyToClipboard(`${API_URL}/api/data`)} style={{ background: 'transparent', border: 'none', color: '#666', padding: '0 12px', cursor: 'pointer', transition: 'color 0.2s' }}>
                                     <Copy size={16} />
@@ -189,8 +179,8 @@ function ProjectDetails() {
                                 </button>
                             </div>
 
-                            <div className="input-group" style={{ display: 'flex', background: '#000', borderRadius: '6px', border: '1px solid #333', overflow: 'hidden', marginBottom: '12px' }}>
-                                <div style={{ padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', color: '#666' }}>
+                            <div className="input-group" style={{ display: 'flex', background: 'var(--color-bg-input)', borderRadius: '6px', border: '1px solid var(--color-border)', overflow: 'hidden', marginBottom: '12px' }}>
+                                <div style={{ padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', color: '#555', borderRight: '1px solid var(--color-border)' }}>
                                     <Key size={16} />
                                 </div>
                                 <input
@@ -202,10 +192,10 @@ function ProjectDetails() {
                             </div>
 
                             <div style={{
-                                background: 'rgba(255, 189, 46, 0.1)',
-                                border: '1px solid rgba(255, 189, 46, 0.2)',
+                                background: 'rgba(255, 189, 46, 0.05)',
+                                border: '1px solid rgba(255, 189, 46, 0.1)',
                                 borderRadius: '6px',
-                                padding: '10px 12px',
+                                padding: '12px',
                                 display: 'flex',
                                 gap: '10px',
                                 alignItems: 'flex-start'
@@ -222,7 +212,7 @@ function ProjectDetails() {
                 {/* --- COLLECTIONS --- */}
                 <div style={{ order: 2 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-main)' }}>
                             <Database size={20} color="var(--color-primary)" /> Collections
                         </h3>
                         <button
@@ -234,11 +224,11 @@ function ProjectDetails() {
                         </button>
                     </div>
 
-                    <div style={{ ...cardStyle, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                    <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: '200px' }}>
                         {project.collections.length === 0 ? (
                             <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
-                                    <Layers size={24} color="#444" />
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--color-bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', border: '1px solid var(--color-border)' }}>
+                                    <Layers size={24} color="#555" />
                                 </div>
                                 <h4 style={{ color: 'var(--color-text-main)', marginBottom: '5px' }}>No Data Yet</h4>
                                 <p style={{ fontSize: '0.9rem', maxWidth: '200px' }}>Create a collection to start storing JSON documents.</p>
@@ -247,23 +237,23 @@ function ProjectDetails() {
                             <div className="table-container">
                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                                     <thead>
-                                        <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'rgba(255,255,255,0.02)' }}>
-                                            <th style={{ padding: '16px', color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Name</th>
-                                            <th style={{ padding: '16px', color: 'var(--color-text-muted)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Schema</th>
+                                        <tr style={{ borderBottom: '1px solid var(--color-border)', background: 'var(--color-bg-input)' }}>
+                                            <th style={{ padding: '16px', color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Name</th>
+                                            <th style={{ padding: '16px', color: 'var(--color-text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Schema</th>
                                             <th style={{ padding: '16px', textAlign: 'right' }}></th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {project.collections.map(c => (
                                             <tr key={c._id} className="collection-row" onClick={() => navigate(`/project/${projectId}/database?collection=${c.name}`)}>
-                                                <td style={{ padding: '16px', fontWeight: 500, color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Database size={16} color="var(--color-text-muted)" /> {c.name}
+                                                <td style={{ padding: '16px', fontWeight: 500, color: 'var(--color-text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Database size={16} color="var(--color-text-muted)" className="row-icon" /> {c.name}
                                                 </td>
                                                 <td style={{ padding: '16px', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
                                                     {c.model.length} fields defined
                                                 </td>
                                                 <td style={{ padding: '16px', textAlign: 'right', color: 'var(--color-text-muted)' }}>
-                                                    <ArrowRight size={16} />
+                                                    <ArrowRight size={16} className="row-arrow" />
                                                 </td>
                                             </tr>
                                         ))}
@@ -277,7 +267,7 @@ function ProjectDetails() {
 
             <style>{`
                 .collection-row {
-                    border-bottom: 1px solid rgba(255,255,255,0.05);
+                    border-bottom: 1px solid var(--color-border);
                     cursor: pointer;
                     transition: background 0.2s;
                 }
@@ -285,12 +275,13 @@ function ProjectDetails() {
                     border-bottom: none;
                 }
                 .collection-row:hover {
-                    background: rgba(255,255,255,0.03);
+                    background: var(--color-bg-input);
                 }
                 .collection-row:hover td {
-                    color: var(--color-primary) !important;
+                    color: var(--color-text-main);
                 }
-                .collection-row:hover svg {
+                .collection-row:hover .row-icon, 
+                .collection-row:hover .row-arrow {
                     color: var(--color-primary) !important;
                 }
                 .spin { animation: spin 1s linear infinite; }

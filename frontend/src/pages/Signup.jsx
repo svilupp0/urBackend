@@ -3,43 +3,37 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useNavigate, Link } from 'react-router-dom';
 import { API_URL } from '../config';
+import { Terminal } from 'lucide-react';
 
 function Signup() {
-    // 1. State for form data
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        name: '' // Added name field
+        name: ''
     });
 
     const navigate = useNavigate();
 
-    // Handle input changes
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // 2. Handle Form Submission
     const handleSubmit = async (e) => {
-        e.preventDefault(); // Prevent page reload
+        e.preventDefault();
 
-        // Basic validation
         if (!formData.email || !formData.password) {
             toast.error('Email and password are required!');
             return;
         }
 
-        const loadingToast = toast.loading('Creating account...');
+        const loadingToast = toast.loading('Creating your account...');
 
         try {
-            // Make API call to your backend
-            // Note: Ensure your backend is running on port 1234
             const response = await axios.post(`${API_URL}/api/auth/register`, formData);
 
             toast.dismiss(loadingToast);
-            toast.success(response.data.message); // "Registered successfully"
+            toast.success(response.data.message);
 
-            // Trigger OTP send
             await axios.post(`${API_URL}/api/auth/send-otp`, { email: formData.email });
 
             toast.success("OTP Sent! Please verify your email.");
@@ -54,7 +48,6 @@ function Signup() {
                 if (typeof data.error === 'string') {
                     errorMessage = data.error;
                 } else if (Array.isArray(data.error)) {
-                    // Handle Zod array
                     errorMessage = data.error[0]?.message || 'Validation failed';
                 } else {
                     errorMessage = JSON.stringify(data.error);
@@ -65,82 +58,117 @@ function Signup() {
         }
     };
 
-    // --- STYLES (Dark Theme - No Labels) ---
-    const containerStyle = {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        padding: '1rem'
-    };
-
-    const formBoxStyle = {
-        width: '100%',
-        maxWidth: '400px',
-    };
-
-    // labelStyle हटा दिया गया है
-
-    const inputStyle = {
-        width: '100%',
-        padding: '12px',
-        borderRadius: 'var(--border-radius)',
-        border: '1px solid var(--color-border)',
-        backgroundColor: 'var(--color-bg-main)',
-        color: 'var(--color-text-main)',
-        boxSizing: 'border-box',
-        // marginBottom हटा दिया, अब कंटेनर div स्पेसिंग संभालेगा
-    };
-
     return (
-        <div className="auth-container" style={containerStyle}>
-            <div className="card" style={formBoxStyle}>
-                <h2 style={{ textAlign: 'center', marginBottom: '25px', fontSize: '1.5rem' }}>Developer Signup</h2>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+            padding: '1rem',
+            background: 'radial-gradient(circle at top center, #1a1a1a 0%, #000000 100%)'
+        }}>
+            <div className="card" style={{ width: '100%', maxWidth: '420px', padding: '2.5rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <div style={{
+                        width: '50px',
+                        height: '50px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--color-border)',
+                        background: 'var(--color-bg-secondary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto 1.5rem auto'
+                    }}>
+                        <Terminal size={24} color="var(--color-text-main)" />
+                    </div>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
+                        Create Account
+                    </h2>
+                    <p style={{ color: 'var(--color-text-muted)' }}>
+                        Start your developer journey
+                    </p>
+                </div>
+
                 <form onSubmit={handleSubmit}>
-                    {/* Name Input - No Label */}
-                    <div style={{ marginBottom: '15px' }}>
+                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Full Name (Optional)</label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            style={inputStyle}
-                            placeholder="Full Name (Optional)" // प्लेसहोल्डर अपडेट किया
+                            className="input-field"
+                            placeholder="John Doe"
+                            style={{
+                                padding: '12px',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
+                                color: '#fff'
+                            }}
                         />
                     </div>
 
-                    {/* Email Input - No Label */}
-                    <div style={{ marginBottom: '15px' }}>
+                    <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Email Address</label>
                         <input
                             type="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            style={inputStyle}
-                            placeholder="Email Address" // प्लेसहोल्डर अपडेट किया
+                            className="input-field"
+                            placeholder="name@example.com"
                             required
+                            style={{
+                                padding: '12px',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
+                                color: '#fff'
+                            }}
                         />
                     </div>
 
-                    {/* Password Input - No Label */}
-                    <div style={{ marginBottom: '25px' }}>
+                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <label className="form-label" style={{ fontSize: '0.9rem' }}>Password</label>
                         <input
                             type="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            style={inputStyle}
-                            placeholder="Password (min 6 chars)" // प्लेसहोल्डर अपडेट किया
+                            className="input-field"
+                            placeholder="Min. 6 characters"
                             required
                             minLength={6}
+                            style={{
+                                padding: '12px',
+                                background: 'var(--color-bg-input)',
+                                border: '1px solid var(--color-border)',
+                                color: '#fff'
+                            }}
                         />
                     </div>
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px' }}>Sign Up</button>
+                    <button
+                        type="submit"
+                        className="btn btn-primary"
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            fontSize: '1rem',
+                            fontWeight: 600,
+                            justifyContent: 'center',
+                            marginTop: '0.5rem'
+                        }}
+                    >
+                        Sign Up
+                    </button>
                 </form>
-                <p style={{ marginTop: '20px', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', textDecoration: 'none' }}>Login</Link>
-                </p>
+
+                <div style={{ marginTop: '2rem', textAlign: 'center', borderTop: '1px solid var(--color-border)', paddingTop: '1.5rem' }}>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.95rem' }}>
+                        Already have an account? <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: 500, textDecoration: 'none' }}>Log in</Link>
+                    </p>
+                </div>
             </div>
         </div>
     );

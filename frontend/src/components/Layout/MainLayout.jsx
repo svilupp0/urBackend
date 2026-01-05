@@ -1,38 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, matchPath } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import ProjectNavbar from './ProjectNavbar';
 import logoImage from '../../assets/logo_u.png';
 
 function MainLayout({ children }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const location = useLocation();
+
+    // Check if we are inside a project route to toggle layout mode
+    // Paths like /project/:projectId/...
+    const isProjectRoute = matchPath("/project/:projectId/*", location.pathname);
 
     return (
         <div className="app-shell">
             {/* Mobile Overlay - Only visible when sidebar is open on mobile */}
-            {isSidebarOpen && (
+            {isSidebarOpen && !isProjectRoute && (
                 <div
                     className="sidebar-overlay"
                     onClick={() => setIsSidebarOpen(false)}
                 ></div>
             )}
 
-            {/* Sidebar - Pass state and close function */}
-            <Sidebar
-                logo={logoImage}
-                isOpen={isSidebarOpen}
-                onClose={() => setIsSidebarOpen(false)}
-            />
+            {/* Sidebar - Only show if NOT in a project route (or if we want global sidebar always, but plan said hide it) */}
+            {!isProjectRoute && (
+                <Sidebar
+                    logo={logoImage}
+                    isOpen={isSidebarOpen}
+                    onClose={() => setIsSidebarOpen(false)}
+                />
+            )}
 
             {/* Main Content Area */}
-            <div className="main-content">
-                {/* Header - Pass toggle function */}
+            {/* If Project Route, remove margin-left (full width) */}
+            <div className={`main-content ${isProjectRoute ? 'full-width' : ''}`}>
+
+                {/* Global Header */}
                 <Header
                     logo={logoImage}
                     onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+                    // Hide toggle button if sidebar is hidden
+                    showToggle={!isProjectRoute}
                 />
 
+                {/* Project Navigation Bar - Only visible in project routes */}
+                {isProjectRoute && <ProjectNavbar />}
+
                 {/* Dynamic Page Content */}
-                <div className="content-wrapper">
+                <div className="content-wrapper" style={isProjectRoute ? { marginTop: 0 } : {}}>
                     {children}
                 </div>
             </div>

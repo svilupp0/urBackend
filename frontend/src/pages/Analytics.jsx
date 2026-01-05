@@ -49,12 +49,12 @@ export default function Analytics() {
     };
 
     return (
-        <div className="container">
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '4rem' }}>
             {/* Header with Refresh */}
-            <div className="page-header">
+            <div className="page-header" style={{ marginBottom: '2.5rem', borderBottom: 'none' }}>
                 <div>
-                    <h1 className="page-title">Project Analytics</h1>
-                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Real-time metrics for your backend.</p>
+                    <h1 className="page-title" style={{ fontSize: '2rem', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>Analytics</h1>
+                    <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Real-time usage metrics and logs.</p>
                 </div>
                 <button
                     onClick={fetchData}
@@ -68,7 +68,7 @@ export default function Analytics() {
             </div>
 
             {/* Stats Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
 
                 {/* 1. Total Requests */}
                 <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
@@ -92,13 +92,13 @@ export default function Analytics() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
                             <HardDrive size={16} /> File Storage
                         </div>
-                        <span style={{ fontSize: '0.8rem', color: '#666' }}>{formatBytes(data.storage.limit)} Limit</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{formatBytes(data.storage.limit)} Limit</span>
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '12px' }}>
                         {formatBytes(data.storage.used)}
                     </div>
                     {/* Progress Bar */}
-                    <div style={{ width: '100%', height: '6px', background: '#2a2a2a', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '6px', background: 'var(--color-bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{
                             width: `${Math.min((data.storage.used / data.storage.limit) * 100, 100)}%`,
                             height: '100%',
@@ -115,13 +115,13 @@ export default function Analytics() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-muted)', fontSize: '0.9rem', fontWeight: 500 }}>
                             <Database size={16} /> Database Size
                         </div>
-                        <span style={{ fontSize: '0.8rem', color: '#666' }}>{formatBytes(data.database?.limit)} Limit</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{formatBytes(data.database?.limit)} Limit</span>
                     </div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '700', marginBottom: '12px' }}>
                         {formatBytes(data.database?.used || 0)}
                     </div>
                     {/* Progress Bar */}
-                    <div style={{ width: '100%', height: '6px', background: '#2a2a2a', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ width: '100%', height: '6px', background: 'var(--color-bg-input)', borderRadius: '3px', overflow: 'hidden' }}>
                         <div style={{
                             width: `${Math.min(((data.database?.used || 0) / (data.database?.limit || 1)) * 100, 100)}%`,
                             height: '100%',
@@ -134,95 +134,98 @@ export default function Analytics() {
             </div>
 
             {/* Main Content Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
 
                 {/* Traffic Chart */}
-                <div className="card" style={{ height: '350px', padding: '1.5rem' }}>
+                <div className="card" style={{ height: '400px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
                     <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>Traffic Overview</h3>
-                    <ResponsiveContainer width="100%" height="85%">
-                        <BarChart data={data.chartData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                            <XAxis
-                                dataKey="_id"
-                                stroke="#666"
-                                fontSize={11}
-                                tickLine={false}
-                                axisLine={false}
-                                dy={10}
-                            />
-                            <YAxis
-                                stroke="#666"
-                                fontSize={11}
-                                tickLine={false}
-                                axisLine={false}
-                                allowDecimals={false}
-                            />
-                            <Tooltip
-                                contentStyle={{ backgroundColor: '#161616', border: '1px solid #333', borderRadius: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}
-                                itemStyle={{ color: '#fff', fontSize: '0.85rem' }}
-                                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                            />
-                            <Bar
-                                dataKey="count"
-                                fill="var(--color-primary)"
-                                radius={[4, 4, 0, 0]}
-                                barSize={40}
-                            />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div style={{ flex: 1, minHeight: 0 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={data.chartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                                <XAxis
+                                    dataKey="_id"
+                                    stroke="var(--color-text-muted)"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    stroke="var(--color-text-muted)"
+                                    fontSize={11}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    allowDecimals={false}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                                    contentStyle={{ backgroundColor: 'var(--color-bg-card)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff' }}
+                                />
+                                <Bar
+                                    dataKey="count"
+                                    fill="var(--color-primary)"
+                                    radius={[4, 4, 0, 0]}
+                                    barSize={40}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
                 {/* Recent Logs List */}
-                <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', maxHeight: '350px' }}>
-                    <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', position: 'sticky', top: 0 }}>
+                <div className="card" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '400px', overflow: 'hidden' }}>
+                    <div style={{ padding: '1.2rem', borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Clock size={18} /> Recent Logs
                         </h3>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Latest 50</span>
                     </div>
 
-                    <div style={{ overflowY: 'auto', flex: 1 }}>
+                    <div style={{ overflowY: 'auto', flex: 1 }} className="custom-scrollbar">
                         <table style={{ width: '100%', fontSize: '0.85rem', borderCollapse: 'collapse' }}>
-                            <thead style={{ position: 'sticky', top: 0, backgroundColor: '#1a1a1a', zIndex: 1 }}>
+                            <thead style={{ position: 'sticky', top: 0, backgroundColor: 'var(--color-bg-card)', zIndex: 1, boxShadow: '0 1px 0 var(--color-border)' }}>
                                 <tr style={{ textAlign: 'left', color: 'var(--color-text-muted)' }}>
-                                    <th style={{ padding: '10px 16px', fontWeight: 600 }}>Status</th>
-                                    <th style={{ padding: '10px 16px', fontWeight: 600 }}>Method</th>
+                                    <th style={{ padding: '10px 16px', fontWeight: 600, width: '80px' }}>Status</th>
+                                    <th style={{ padding: '10px 16px', fontWeight: 600, width: '80px' }}>Method</th>
                                     <th style={{ padding: '10px 16px', fontWeight: 600 }}>Path</th>
-                                    <th style={{ padding: '10px 16px', fontWeight: 600, textAlign: 'right' }}>Time</th>
+                                    <th style={{ padding: '10px 16px', fontWeight: 600, textAlign: 'right', width: '100px' }}>Time</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {data.logs.length === 0 ? (
                                     <tr>
-                                        <td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#555' }}>
+                                        <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
                                             No recent activity
                                         </td>
                                     </tr>
                                 ) : (
                                     data.logs.map((log) => (
-                                        <tr key={log._id} style={{ borderBottom: '1px solid #222', transition: 'background 0.2s' }} className="log-row">
-                                            <td style={{ padding: '10px 16px' }}>
+                                        <tr key={log._id} style={{ borderBottom: '1px solid var(--color-border)', transition: 'background 0.2s' }} className="log-row">
+                                            <td style={{ padding: '12px 16px' }}>
                                                 <span style={{
                                                     color: getStatusColor(log.status),
-                                                    backgroundColor: `${getStatusColor(log.status)}20`,
+                                                    backgroundColor: `${getStatusColor(log.status)}15`,
                                                     padding: '2px 8px',
                                                     borderRadius: '4px',
                                                     fontSize: '0.75rem',
-                                                    fontWeight: '700'
+                                                    fontWeight: '700',
+                                                    border: `1px solid ${getStatusColor(log.status)}30`
                                                 }}>
                                                     {log.status}
                                                 </span>
                                             </td>
-                                            <td style={{ padding: '10px 16px', fontWeight: 500 }}>
+                                            <td style={{ padding: '12px 16px', fontWeight: 600 }}>
                                                 <span style={{
                                                     color: log.method === 'GET' ? '#60a5fa' :
                                                         log.method === 'POST' ? '#34d399' :
                                                             log.method === 'DELETE' ? '#ef4444' : '#a78bfa'
                                                 }}>{log.method}</span>
                                             </td>
-                                            <td style={{ padding: '10px 16px', fontFamily: 'monospace', color: '#ccc' }}>
+                                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: 'var(--color-text-main)' }}>
                                                 {log.path.replace('/api/', '/')}
                                             </td>
-                                            <td style={{ padding: '10px 16px', color: '#666', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                                            <td style={{ padding: '12px 16px', color: 'var(--color-text-muted)', textAlign: 'right', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>
                                                 {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                         </tr>
@@ -238,11 +241,7 @@ export default function Analytics() {
             <style>{`
                 .spin { animation: spin 1s linear infinite; }
                 @keyframes spin { 100% { transform: rotate(360deg); } }
-                .log-row:hover { background-color: rgba(255,255,255,0.03); }
-                ::-webkit-scrollbar { width: 6px; height: 6px; }
-                ::-webkit-scrollbar-track { background: #111; }
-                ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-                ::-webkit-scrollbar-thumb:hover { background: #444; }
+                .log-row:hover { background-color: var(--color-bg-input); }
             `}</style>
         </div>
     );

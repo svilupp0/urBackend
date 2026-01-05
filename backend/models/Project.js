@@ -15,6 +15,13 @@ const collectionSchema = new mongoose.Schema({
     model: [fieldSchema]
 });
 
+const externalConfigSchema = new mongoose.Schema({
+    encrypted: { type: String, select: false },
+    iv: { type: String, select: false },
+    tag: { type: String, select: false }
+}, { _id: false });
+
+
 const projectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: String,
@@ -34,13 +41,19 @@ const projectSchema = new mongoose.Schema({
     collections: [collectionSchema],
 
     // STORAGE LIMITS (Files)
-    storageUsed: { type: Number, default: 0 }, // in bytes
-    storageLimit: { type: Number, default: 100 * 1024 * 1024 }, // 100MB for Files
+    storageUsed: { type: Number, default: 0 },
+    storageLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB for Files
 
     // DATABASE LIMITS (JSON Docs)
-    databaseUsed: { type: Number, default: 0 }, // in bytes
-    databaseLimit: { type: Number, default: 50 * 1024 * 1024 } // 50MB for Data (approx 50,000 large docs)
+    databaseUsed: { type: Number, default: 0 }, // 
+    databaseLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB for Data
 
+    externalConfig: {
+        type: externalConfigSchema,
+        default: null
+    },
+
+    isExternal: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', projectSchema);

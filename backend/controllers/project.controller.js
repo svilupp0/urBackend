@@ -1,9 +1,13 @@
 const mongoose = require("mongoose")
 const Project = require("../models/Project")
+const Log = require("../models/Log")
 const { createProjectSchema, createCollectionSchema } = require('../utils/input.validation');
 const { generateApiKey, hashApiKey } = require('../utils/api');
 const { z } = require('zod');
-
+const { encrypt } = require('../utils/encryption');
+const { URL } = require('url');
+const { getConnection } = require("../utils/connectionManager");
+const { getCompiledModel } = require("../utils/injectModel")
 
 
 // CONFIGURATION
@@ -87,7 +91,58 @@ module.exports.regenerateApiKey = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+};
+
+
+//function to validate monguri
+const isSafeUri = (uri) => {
+    try {
+        const parsed = new URL(uri);
+        const host = parsed.hostname.toLowerCase();
+        const badHosts = ['localhost', '127.0.0.1', '0.0.0.0', '::1'];
+        return !badHosts.includes(host);
+    } catch (e) { return false; }
+};
+
+
+
+module.exports.updateExternalConfig = async (req, res) => {
+    try {
+        const { projectId } = req.params;
+        const { dbUri, storageUrl, storageKey, storageProvider } = req.body;
+
+        if (!dbUri && (!storageUrl || !storageKey)) {
+            return res.status(400).json({
+                error: "At least one configuration (Database or Storage) must be provided."
+            });
+        }
+
+        if (dbUri && !isSafeUri(dbUri)) return res.status(400).json({ error: "Invalid DB URI" });
+
+        const configToEncrypt = {};
+        if (dbUri) configToEncrypt.dbUri = dbUri;
+        if (storageUrl && storageKey) {
+            configToEncrypt.storageUrl = storageUrl;
+            configToEncrypt.storageKey = storageKey;
+            configToEncrypt.storageProvider = storageProvider || 'supabase';
+        }
+
+        const encryptedConfig = encrypt(JSON.stringify(configToEncrypt));
+
+        const project = await Project.findOneAndUpdate(
+            { _id: projectId, owner: req.user._id },
+            { $set: { externalConfig: encryptedConfig, isExternal: true } },
+            { new: true }
+        );
+
+        if (!project) return res.status(404).json({ error: "Project not found." });
+
+        res.status(200).json({ message: "Configuration saved successfully." });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 }
+
 
 module.exports.createCollection = async (req, res) => {
     try {
@@ -122,13 +177,28 @@ module.exports.getData = async (req, res) => {
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
         if (!project) return res.status(404).json({ error: "Project not found." });
 
-        const finalCollectionName = `${project._id}_${collectionName}`;
-        const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
+        // const finalCollectionName = `${project._id}_${collectionName}`;
 
-        let data = [];
-        if (collectionsList.length > 0) {
-            data = await mongoose.connection.db.collection(finalCollectionName).find({}).limit(50).toArray();
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) {
+            return res.status(404).json({
+                error: "Collection not found",
+                collection: collectionName
+            });
         }
+
+        const connection = await getConnection(projectId);
+        const model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+
+        // const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
+
+        const data = await model.find({}).limit(50);
+
+        //        let data = [];
+        // if (collectionsList.length > 0) {
+        //     data = await mongoose.connection.db.collection(finalCollectionName).find({}).limit(50).toArray();
+        // }
+
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -143,18 +213,31 @@ module.exports.insertData = async (req, res) => {
 
         const finalCollectionName = `${project._id}_${collectionName}`;
         const incomingData = req.body;
-        const docSize = Buffer.byteLength(JSON.stringify(incomingData));
-        const limit = project.databaseLimit || 50 * 1024 * 1024;
 
-        if ((project.databaseUsed || 0) + docSize > limit) {
-            return res.status(403).json({ error: "Database limit exceeded. Delete some data." });
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) {
+            return res.status(404).json({ error: "Collection configuration not found." });
         }
 
-        const result = await mongoose.connection.db
-            .collection(finalCollectionName)
-            .insertOne(incomingData);
+        let docSize = 0;
+        if (!project.isExternal) {
+            docSize = Buffer.byteLength(JSON.stringify(incomingData));
 
-        project.databaseUsed = (project.databaseUsed || 0) + docSize;
+            const limit = project.databaseLimit || 20 * 1024 * 1024;
+
+            if ((project.databaseUsed || 0) + docSize > limit) {
+                return res.status(403).json({ error: "Database limit exceeded. Delete some data." });
+            }
+        }
+
+        const connection = await getConnection(projectId);
+        const model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+
+        const result = await model.create(incomingData);
+
+        if (!project.isExternal) {
+            project.databaseUsed = (project.databaseUsed || 0) + docSize;
+        }
         await project.save();
 
         res.json(result);
@@ -166,27 +249,40 @@ module.exports.insertData = async (req, res) => {
 module.exports.deleteRow = async (req, res) => {
     try {
         const { projectId, collectionName, id } = req.params;
+
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
         if (!project) return res.status(404).json({ error: "Project not found." });
 
-        const finalCollectionName = `${project._id}_${collectionName}`;
-        const collection = mongoose.connection.db.collection(finalCollectionName);
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) {
+            return res.status(404).json({ error: "Collection not found." });
+        }
 
-        const docToDelete = await collection.findOne({ _id: new mongoose.Types.ObjectId(id) });
+        const connection = await getConnection(projectId);
+        const Model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
 
-        if (docToDelete) {
-            const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
-            await collection.deleteOne({ _id: new mongoose.Types.ObjectId(id) });
+        const docToDelete = await Model.findById(id);
+        if (!docToDelete) {
+            return res.status(404).json({ error: "Document not found." });
+        }
+
+        const docSize = Buffer.byteLength(JSON.stringify(docToDelete));
+
+
+        await Model.deleteOne({ _id: id });
+
+        if (!project.isExternal) {
             project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
             await project.save();
         }
 
-        res.json({ success: true });
+        res.json({ success: true, message: "Document deleted successfully" });
+
     } catch (err) {
-        console.log(err)
+        console.error("Delete Error:", err);
         res.status(500).json({ error: err.message });
     }
-}
+};
 
 module.exports.listFiles = async (req, res) => {
     try {

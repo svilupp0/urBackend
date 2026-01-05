@@ -28,6 +28,7 @@ module.exports = function (req, res, next) {
         // Proceed to the next middleware or route handler
         next();
     } catch (err) {
+        console.log("err---------------2")
         console.error(err);
 
         // Do not expose detailed error information in production
