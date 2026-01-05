@@ -122,7 +122,7 @@ module.exports.sendOtp = async (req, res) => {
 
         const existingOtp = await otpSchema.findOne({ userId: existingUser._id });
         if (existingOtp) {
-            await existingOtp.remove();
+            await existingOtp.deleteOne();
         }
         const newOtp = new otpSchema(
             {
