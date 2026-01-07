@@ -46,7 +46,7 @@ async function getConnection(projectId) {
     });
 
     connection.on("error", (err) => {
-        console.error(`❌ Connection error [${projectId}]:`, err);
+        console.error("❌ Connection error [%s]:", projectId, err);
         registry.delete(key); // Error hone par cache se hatao
     });
 
