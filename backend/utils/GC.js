@@ -1,4 +1,4 @@
-const registry = require("./registry");
+const { registry } = require("./registry");
 function garbageCollect() {
     setInterval(() => {
         console.log("20 minutes passed");

@@ -1,5 +1,12 @@
 const mongoose = require('mongoose');
 
+// Encryption schema ko reuse karne ke liye alag se define kiya
+const resourceConfigSchema = new mongoose.Schema({
+    encrypted: { type: String, select: false },
+    iv: { type: String, select: false },
+    tag: { type: String, select: false }
+}, { _id: false });
+
 const fieldSchema = new mongoose.Schema({
     key: { type: String, required: true },
     type: {
@@ -14,13 +21,6 @@ const collectionSchema = new mongoose.Schema({
     name: { type: String, required: true },
     model: [fieldSchema]
 });
-
-const externalConfigSchema = new mongoose.Schema({
-    encrypted: { type: String, select: false },
-    iv: { type: String, select: false },
-    tag: { type: String, select: false }
-}, { _id: false });
-
 
 const projectSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -42,18 +42,23 @@ const projectSchema = new mongoose.Schema({
 
     // STORAGE LIMITS (Files)
     storageUsed: { type: Number, default: 0 },
-    storageLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB for Files
+    storageLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB default
 
     // DATABASE LIMITS (JSON Docs)
-    databaseUsed: { type: Number, default: 0 }, // 
-    databaseLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB for Data
+    databaseUsed: { type: Number, default: 0 },
+    databaseLimit: { type: Number, default: 20 * 1024 * 1024 }, // 20MB default
 
-    externalConfig: {
-        type: externalConfigSchema,
-        default: null
-    },
-
-    isExternal: { type: Boolean, default: false }
+    // Granular Resources Structure
+    resources: {
+        db: {
+            isExternal: { type: Boolean, default: false },
+            config: { type: resourceConfigSchema, default: null }
+        },
+        storage: {
+            isExternal: { type: Boolean, default: false },
+            config: { type: resourceConfigSchema, default: null }
+        }
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Project', projectSchema);

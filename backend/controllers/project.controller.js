@@ -1,21 +1,25 @@
 const mongoose = require("mongoose")
 const Project = require("../models/Project")
 const Log = require("../models/Log")
-const { createProjectSchema, createCollectionSchema } = require('../utils/input.validation');
+const { getStorage } = require("../utils/storage.manager");
+const { randomUUID } = require("crypto");
+const { createProjectSchema, createCollectionSchema, updateExternalConfigSchema } = require('../utils/input.validation');
 const { generateApiKey, hashApiKey } = require('../utils/api');
 const { z } = require('zod');
 const { encrypt } = require('../utils/encryption');
 const { URL } = require('url');
-const { getConnection } = require("../utils/connectionManager");
+const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel")
+const { storageRegistry } = require("../utils/registry");
 
 
-// CONFIGURATION
-const multer = require('multer');
-const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-exports.supabase = supabase;
-const storage = multer.memoryStorage();
+
+const getBucket = (project) =>
+    project.resources?.storage?.isExternal ? "files" : "dev-files";
+
+const isExternalStorage = (project) =>
+    !!project.resources?.storage?.isExternal;
+
 
 
 module.exports.createProject = async (req, res) => {
@@ -109,37 +113,52 @@ const isSafeUri = (uri) => {
 module.exports.updateExternalConfig = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const { dbUri, storageUrl, storageKey, storageProvider } = req.body;
 
-        if (!dbUri && (!storageUrl || !storageKey)) {
-            return res.status(400).json({
-                error: "At least one configuration (Database or Storage) must be provided."
-            });
+        // 1. Zod Validation
+        const validatedData = updateExternalConfigSchema.parse(req.body);
+        const { dbUri, storageUrl, storageKey, storageProvider } = validatedData;
+
+        const updateData = {};
+
+        // 2. Database URI Check & Encryption
+        if (dbUri) {
+            if (!isSafeUri(dbUri)) return res.status(400).json({ error: "DB URI is pointing to a restricted host (localhost/internal)." });
+
+            // Naye model structure ke hisaab se save karein
+            updateData['resources.db.config'] = encrypt(JSON.stringify({ dbUri }));
+            updateData['resources.db.isExternal'] = true;
         }
 
-        if (dbUri && !isSafeUri(dbUri)) return res.status(400).json({ error: "Invalid DB URI" });
-
-        const configToEncrypt = {};
-        if (dbUri) configToEncrypt.dbUri = dbUri;
+        // 3. Storage Config Encryption
         if (storageUrl && storageKey) {
-            configToEncrypt.storageUrl = storageUrl;
-            configToEncrypt.storageKey = storageKey;
-            configToEncrypt.storageProvider = storageProvider || 'supabase';
+            const storageConfig = {
+                storageUrl,
+                storageKey,
+                storageProvider: storageProvider || 'supabase'
+            };
+            updateData['resources.storage.config'] = encrypt(JSON.stringify(storageConfig));
+            updateData['resources.storage.isExternal'] = true;
         }
-
-        const encryptedConfig = encrypt(JSON.stringify(configToEncrypt));
 
         const project = await Project.findOneAndUpdate(
             { _id: projectId, owner: req.user._id },
-            { $set: { externalConfig: encryptedConfig, isExternal: true } },
+            { $set: updateData },
             { new: true }
         );
 
-        if (!project) return res.status(404).json({ error: "Project not found." });
+        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
 
-        res.status(200).json({ message: "Configuration saved successfully." });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(200).json({ message: "External configuration updated successfully." });
+    } catch (err) {
+        // Zod Error handling ko safe banayein
+        if (err.name === 'ZodError') {
+            return res.status(400).json({
+                error: err.errors?.[0]?.message || err.issues?.[0]?.message || "Validation failed"
+            });
+        }
+
+        console.error("External Config Error:", err);
+        res.status(500).json({ error: err.message });
     }
 }
 
@@ -188,7 +207,7 @@ module.exports.getData = async (req, res) => {
         }
 
         const connection = await getConnection(projectId);
-        const model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+        const model = getCompiledModel(connection, collectionConfig, projectId, project.resources.db.isExternal);
 
         // const collectionsList = await mongoose.connection.db.listCollections({ name: finalCollectionName }).toArray();
 
@@ -220,7 +239,7 @@ module.exports.insertData = async (req, res) => {
         }
 
         let docSize = 0;
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             docSize = Buffer.byteLength(JSON.stringify(incomingData));
 
             const limit = project.databaseLimit || 20 * 1024 * 1024;
@@ -231,11 +250,11 @@ module.exports.insertData = async (req, res) => {
         }
 
         const connection = await getConnection(projectId);
-        const model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+        const model = getCompiledModel(connection, collectionConfig, projectId, project.resources.db.isExternal);
 
         const result = await model.create(incomingData);
 
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             project.databaseUsed = (project.databaseUsed || 0) + docSize;
         }
         await project.save();
@@ -259,7 +278,7 @@ module.exports.deleteRow = async (req, res) => {
         }
 
         const connection = await getConnection(projectId);
-        const Model = getCompiledModel(connection, collectionConfig, projectId, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, projectId, project.resources.db.isExternal);
 
         const docToDelete = await Model.findById(id);
         if (!docToDelete) {
@@ -271,7 +290,7 @@ module.exports.deleteRow = async (req, res) => {
 
         await Model.deleteOne({ _id: id });
 
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
             await project.save();
         }
@@ -287,109 +306,178 @@ module.exports.deleteRow = async (req, res) => {
 module.exports.listFiles = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
+            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
         if (!project) return res.status(404).json({ error: "Project not found" });
 
-        const { data, error } = await supabase.storage.from('dev-files').list(`${projectId}`, {
-            limit: 100,
-            sortBy: { column: 'created_at', order: 'desc' },
-        });
+        const supabase = await getStorage(project);
+        const bucket = getBucket(project);
+
+        const { data, error } = await supabase.storage
+            .from(bucket)
+            .list(`${projectId}`, {
+                limit: 100,
+                sortBy: { column: "created_at", order: "desc" }
+            });
 
         if (error) throw error;
 
         const files = data.map(file => {
-            const { data: publicUrlData } = supabase.storage.from("dev-files").getPublicUrl(`${projectId}/${file.name}`);
-            return { ...file, publicUrl: publicUrlData.publicUrl, path: `${projectId}/${file.name}` };
+            const { data: url } = supabase.storage
+                .from(bucket)
+                .getPublicUrl(`${projectId}/${file.name}`);
+
+            return {
+                ...file,
+                path: `${projectId}/${file.name}`,
+                publicUrl: url.publicUrl
+            };
         });
 
         res.json(files);
     } catch (err) {
-        console.log(err)
         res.status(500).json({ error: err.message });
     }
-}
+};
+
 
 module.exports.uploadFile = async (req, res) => {
     try {
         const { projectId } = req.params;
         const file = req.file;
+
         if (!file) return res.status(400).json({ error: "No file uploaded" });
 
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
+            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
         if (!project) return res.status(404).json({ error: "Project not found" });
 
-        if (project.storageUsed + file.size > project.storageLimit) {
-            return res.status(403).json({ error: "Storage limit exceeded. Delete some files." });
+        const external = isExternalStorage(project);
+
+        if (!external) {
+            if (project.storageUsed + file.size > project.storageLimit) {
+                return res.status(403).json({ error: "Storage limit exceeded" });
+            }
         }
 
-        const fileName = `${projectId}/${Date.now()}_${file.originalname.replace(/\s+/g, '_')}`;
+        const supabase = await getStorage(project);
+        const bucket = getBucket(project);
 
-        const { error } = await supabase.storage.from("dev-files").upload(fileName, file.buffer, {
-            contentType: file.mimetype
-        });
+        const safeName = file.originalname.replace(/\s+/g, "_");
+        const path = `${projectId}/${randomUUID()}_${safeName}`;
+
+        const { error } = await supabase.storage
+            .from(bucket)
+            .upload(path, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false
+            });
 
         if (error) throw error;
 
-        project.storageUsed += file.size;
-        await project.save();
+        if (!external) {
+            project.storageUsed += file.size;
+            await project.save();
+        }
 
-        res.json({ message: "Uploaded" });
+        res.json({ success: true, path });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.log("upload file ke catch me hu");
+        res.status(500).json({ error: err });
     }
-}
+};
+
 
 module.exports.deleteFile = async (req, res) => {
     try {
         const { projectId } = req.params;
         const { path } = req.body;
 
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!path) return res.status(400).json({ error: "Path required" });
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
+            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
         if (!project) return res.status(404).json({ error: "Project not found" });
 
-        const { error } = await supabase.storage.from('dev-files').remove([path]);
+        if (!path.startsWith(`${projectId}/`)) {
+            return res.status(403).json({ error: "Access denied" });
+        }
+
+        const supabase = await getStorage(project);
+        const bucket = getBucket(project);
+        const external = isExternalStorage(project);
+
+        let fileSize = 0;
+
+        if (!external) {
+            const { data } = await supabase.storage
+                .from(bucket)
+                .list(projectId, {
+                    search: path.split("/").pop()
+                });
+
+            if (data?.length) {
+                fileSize = data[0]?.metadata?.size || 0;
+            }
+        }
+
+        const { error } = await supabase.storage.from(bucket).remove([path]);
         if (error) throw error;
+
+        if (!external && fileSize > 0) {
+            project.storageUsed = Math.max(0, project.storageUsed - fileSize);
+            await project.save();
+        }
 
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-}
+};
+
 
 module.exports.deleteAllFiles = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
+            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
         if (!project) return res.status(404).json({ error: "Project not found" });
 
-        let deletedCount = 0;
+        const supabase = await getStorage(project);
+        const bucket = getBucket(project);
+
         let hasMore = true;
+        let deleted = 0;
 
         while (hasMore) {
-            const { data: files, error } = await supabase.storage
-                .from('dev-files')
+            const { data, error } = await supabase.storage
+                .from(bucket)
                 .list(projectId, { limit: 100 });
 
             if (error) throw error;
 
-            if (files && files.length > 0) {
-                const paths = files.map(f => `${projectId}/${f.name}`);
-                const { error: delError } = await supabase.storage
-                    .from('dev-files')
-                    .remove(paths);
-
-                if (delError) throw delError;
-                deletedCount += files.length;
-            } else {
+            if (data.length === 0) {
                 hasMore = false;
+            } else {
+                const paths = data.map(f => `${projectId}/${f.name}`);
+                await supabase.storage.from(bucket).remove(paths);
+                deleted += data.length;
             }
         }
 
-        res.json({ success: true, count: deletedCount });
+        if (!isExternalStorage(project)) {
+            project.storageUsed = 0;
+            await project.save();
+        }
+
+        res.json({ success: true, deleted });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
-}
+};
+
 
 module.exports.updateProject = async (req, res) => {
     try {
@@ -409,7 +497,8 @@ module.exports.updateProject = async (req, res) => {
 module.exports.deleteProject = async (req, res) => {
     try {
         const projectId = req.params.projectId;
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
+            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
         if (!project) return res.status(404).json({ error: "Project not found or access denied." });
 
         for (const col of project.collections) {
@@ -423,27 +512,31 @@ module.exports.deleteProject = async (req, res) => {
             await mongoose.connection.db.dropCollection(`${project._id}_users`);
         } catch (e) { }
 
+        // DELETE ALL FILES (BYOS SAFE)
+        const supabase = await getStorage(project);
+        const bucket = getBucket(project);
+
         let hasMoreFiles = true;
+
         while (hasMoreFiles) {
             const { data: files, error } = await supabase.storage
-                .from('dev-files')
-                .list(`${projectId}`, { limit: 100 });
+                .from(bucket)
+                .list(projectId, { limit: 100 });
 
             if (error) throw error;
 
             if (files && files.length > 0) {
-                const pathsToRemove = files.map(f => `${projectId}/${f.name}`);
-                const { error: removeError } = await supabase.storage
-                    .from('dev-files')
-                    .remove(pathsToRemove);
-
-                if (removeError) throw removeError;
+                const paths = files.map(f => `${projectId}/${f.name}`);
+                await supabase.storage.from(bucket).remove(paths);
             } else {
                 hasMoreFiles = false;
             }
         }
 
+
         await Project.deleteOne({ _id: projectId });
+        storageRegistry.delete(projectId.toString());
+
         res.json({ message: "Project and all associated resources deleted successfully" });
     } catch (err) {
         console.error(err);

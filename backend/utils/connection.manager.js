@@ -1,4 +1,4 @@
-const registry = require("./registry");
+const { registry } = require("./registry");
 const Project = require("../models/Project");
 const { decrypt } = require("./encryption");
 const mongoose = require("mongoose");
@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 
 async function getConnection(projectId) {
     const key = projectId.toString();
+
+    // 1. Registry Check
     if (registry.has(key)) {
         const cachedConn = registry.get(key);
         if (cachedConn.readyState === 1) {
@@ -14,36 +16,44 @@ async function getConnection(projectId) {
         }
     }
 
+    // 2. Fetch Project with HIDDEN fields
     const projectDoc = await Project.findById(projectId)
-        .select("+externalConfig.iv +externalConfig.tag +externalConfig.encrypted");
+        .select("+resources.db.config.encrypted +resources.db.config.iv +resources.db.config.tag resources.db.isExternal");
+
     if (!projectDoc) throw new Error("Project not found");
-    if (!projectDoc.isExternal) {
+
+    // 3. System DB fallback
+    if (!projectDoc.resources.db.isExternal) {
         return mongoose.connection;
     }
 
+    // 4. Decrypt logic
     let config;
     try {
-        const decryptedConfig = decrypt(projectDoc.externalConfig);
+        // Pura config object pass karo jisme encrypted, iv, aur tag ho
+        const decryptedConfig = decrypt(projectDoc.resources.db.config);
         config = JSON.parse(decryptedConfig);
-    } catch {
+    } catch (err) {
+        console.error("Decryption Error:", err);
         throw new Error("Invalid or corrupted external config");
     }
 
+    // 5. Create Dynamic Connection
     const connection = mongoose.createConnection(config.dbUri);
 
     connection.on("connected", () => {
-        console.log(`DB connected for project ${projectId}`);
+        console.log(`✅ External DB connected: ${projectId}`);
     });
 
     connection.on("error", (err) => {
-        console.error("Connection error:", err);
+        console.error("❌ Connection error [%s]:", projectId, err);
+        registry.delete(key); // Error hone par cache se hatao
     });
 
     connection.on("close", () => {
         registry.delete(key);
-        console.log(`DB connection closed for project ${key}`);
+        console.log(`🔌 Connection closed: ${key}`);
     });
-
 
     connection.lastAccessed = new Date();
     registry.set(key, connection);
