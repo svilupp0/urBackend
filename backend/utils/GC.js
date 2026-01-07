@@ -1,4 +1,4 @@
-const { registry } = require("./registry");
+const { registry, storageRegistry } = require("./registry");
 function garbageCollect() {
     setInterval(() => {
         console.log("20 minutes passed");
@@ -16,6 +16,18 @@ function garbageCollect() {
     }, 20 * 60 * 1000);
 }
 
+function storageGarbageCollect() {
+    setInterval(() => {
+        console.log("1 day passed");
+        const now = new Date();
+        for (const [key, value] of storageRegistry) {
+            if (now - value.lastUsed > 24 * 60 * 60 * 1000) {
+                storageRegistry.delete(key);
+            }
+        }
+    }, 24 * 60 * 60 * 1000);
+}
+console.log("Garbage Collecting");
 garbageCollect();
-
-module.exports = garbageCollect;
+storageGarbageCollect();
+module.exports = { garbageCollect, storageGarbageCollect };

@@ -16,7 +16,6 @@ function generateApiKey() {
 //api hashing
 function hashApiKey(apikey) {
     // scrypt hashing: fast but brute focre resistant
-    // 'salt' को .env में रखना बेहतर है
     const salt = process.env.API_KEY_SALT;
 
     // generate a derived key of 64 bytes

@@ -387,7 +387,7 @@ export default function Database() {
                 /* Component Specific Styles */
                 .db-layout {
                     display: flex;
-                    height: calc(100vh - var(--header-height) - 56px); /* Subtract header and project navbar */
+                    height: 100%; /* Fill the proper container */
                     overflow: hidden;
                     background: var(--color-bg-main);
                     position: relative;
@@ -476,6 +476,7 @@ export default function Database() {
                     align-items: center;
                     border-bottom: 1px solid var(--color-border);
                     z-index: 10;
+                    flex-shrink: 0; /* Prevent header from collapsing */
                 }
 
                 .header-left {
@@ -709,6 +710,8 @@ export default function Database() {
                     font-size: 0.85rem;
                     overflow: auto;
                     height: 100%;
+                    white-space: pre-wrap;
+                    word-break: break-all;
                 }
                 
                 .animate-spin {

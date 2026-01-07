@@ -113,7 +113,7 @@ function LandingPage() {
 
             <nav className={`nav-glass ${!isNavVisible ? 'nav-hidden' : ''} ${scrolled ? 'nav-scrolled' : ''}`}>
                 <div className="nav-container">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 800, fontSize: '1.2rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 800, fontSize: '1.2rem', flex: 1 }}>
                         <img src="/logo_u.png" alt="urBackend Logo" style={{ height: '32px', width: 'auto' }} />
                         <span style={{ letterSpacing: '-0.5px' }}>urBackend</span>
                     </div>
@@ -125,7 +125,7 @@ function LandingPage() {
                         <a href="#faq" style={{ textDecoration: 'none', color: 'inherit', transition: 'color 0.2s' }}>FAQ</a>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
                         {isAuthenticated ? (
                             <button onClick={() => navigate('/dashboard')} className="btn btn-primary" style={{ fontWeight: 600 }}>
                                 Console
@@ -311,6 +311,48 @@ function LandingPage() {
                             <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>Auto-scaling</span>
                             <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>DDoS Protection</span>
                             <span style={{ background: '#1a1a1a', padding: '6px 12px', borderRadius: '6px', fontSize: '0.8rem', color: '#888' }}>99.9% Uptime</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="byod" style={{ padding: '8rem 0', background: '#0A0A0A', borderTop: '1px solid #111' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+                        <h2 className="section-title">Bring Your Own Infrastructure</h2>
+                        <p className="section-desc">Already have a database? Connect your existing MongoDB or S3 bucket and get instant APIs.</p>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+                        <div className="card" style={{ background: '#111', border: '1px solid #222', padding: '3rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <div style={{ padding: '12px', background: 'rgba(62, 207, 142, 0.1)', borderRadius: '12px', color: '#3ECF8E' }}>
+                                    <Database size={32} />
+                                </div>
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>BYO Database</h3>
+                            </div>
+                            <p style={{ color: '#888', lineHeight: 1.6, marginBottom: '2rem' }}>
+                                Connect your self-hosted MongoDB or Atlas cluster. We provide the instant API layer, auth, and validation schema, while you keep full ownership of the data.
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <span className="hero-pill" style={{ margin: 0, background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: '#ccc' }}>MongoDB Atlas</span>
+                                <span className="hero-pill" style={{ margin: 0, background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: '#ccc' }}>Self-Hosted</span>
+                            </div>
+                        </div>
+
+                        <div className="card" style={{ background: '#111', border: '1px solid #222', padding: '3rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                                <div style={{ padding: '12px', background: 'rgba(64, 158, 255, 0.1)', borderRadius: '12px', color: '#409EFF' }}>
+                                    <HardDrive size={32} />
+                                </div>
+                                <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>BYO Storage</h3>
+                            </div>
+                            <p style={{ color: '#888', lineHeight: 1.6, marginBottom: '2rem' }}>
+                                Link your supabase buckets or Supabase Storage. We handle the file upload tokens, permissions, and CDN delivery automatically.
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                <span className="hero-pill" style={{ margin: 0, background: 'rgba(255,255,255,0.05)', border: '1px solid #333', color: '#ccc' }}>Supabase</span>
+                            </div>
                         </div>
                     </div>
                 </div>

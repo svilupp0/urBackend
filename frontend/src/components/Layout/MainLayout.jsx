@@ -34,7 +34,8 @@ function MainLayout({ children }) {
 
             {/* Main Content Area */}
             {/* If Project Route, remove margin-left (full width) */}
-            <div className={`main-content ${isProjectRoute ? 'full-width' : ''}`}>
+            {/* Add paddingTop to account for fixed global header */}
+            <div className={`main-content ${isProjectRoute ? 'full-width' : ''}`} style={{ paddingTop: 'var(--header-height)' }}>
 
                 {/* Global Header */}
                 <Header
@@ -48,7 +49,14 @@ function MainLayout({ children }) {
                 {isProjectRoute && <ProjectNavbar />}
 
                 {/* Dynamic Page Content */}
-                <div className="content-wrapper" style={isProjectRoute ? { marginTop: 0 } : {}}>
+                {/* Remove default margin-top as main-content has padding now. Remove padding for Database page. */}
+                <div
+                    className="content-wrapper"
+                    style={{
+                        marginTop: 0,
+                        padding: isProjectRoute && location.pathname.includes('/database') ? 0 : undefined
+                    }}
+                >
                     {children}
                 </div>
             </div>

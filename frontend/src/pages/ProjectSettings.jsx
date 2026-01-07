@@ -116,7 +116,10 @@ export default function ProjectSettings() {
             </div>
 
             {/* External Configuration */}
-            <ExternalConfigForm project={project} projectId={projectId} token={token} />
+            <div style={{ display: 'grid', gap: '2rem' }}>
+                <DatabaseConfigForm project={project} projectId={projectId} token={token} />
+                <StorageConfigForm project={project} projectId={projectId} token={token} />
+            </div>
 
             {/* Danger Zone */}
             <div className="card" style={{ border: '1px solid rgba(234, 84, 85, 0.3)', background: 'rgba(234, 84, 85, 0.02)' }}>
@@ -158,31 +161,106 @@ export default function ProjectSettings() {
     );
 }
 
-function ExternalConfigForm({ project, projectId, token }) {
-    const [config, setConfig] = useState({
-        dbUri: '',
-        storageUrl: '',
-        storageKey: '',
-        storageProvider: 'supabase' // default
-    });
+function DatabaseConfigForm({ project, projectId, token }) {
+    const [dbUri, setDbUri] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isConfigured, setIsConfigured] = useState(project?.isExternal || false);
-    const [showForm, setShowForm] = useState(!project?.isExternal);
+    // Use optional chaining carefully - project might be null initially
+    const isConfigured = project?.resources?.db?.isExternal || false;
+    const [showForm, setShowForm] = useState(!isConfigured);
 
     useEffect(() => {
-        setIsConfigured(project?.isExternal || false);
-        // If it's not configured, always show form. If it is, hide it by default.
-        setShowForm(!project?.isExternal);
+        const configured = project?.resources?.db?.isExternal || false;
+        setShowForm(!configured);
     }, [project]);
 
-    const handleChange = (e) => {
-        setConfig(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const handleUpdate = async () => {
+        if (!dbUri) return toast.error("Database URI is required");
+
+        setLoading(true);
+        try {
+            await axios.patch(`${API_URL}/api/projects/${projectId}/byod-config`,
+                { dbUri },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            toast.success("Database configuration updated!");
+            setShowForm(false);
+            setDbUri('');
+            // Typically we'd reload project data here, but for now we rely on user refresh or optimistic ui if needed
+            // Ideally notify parent to refresh project, but basic flow:
+        } catch (err) {
+            toast.error(err.response?.data?.error || "Failed to update DB config");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleUpdateConfig = async () => {
-        if (!config.dbUri && (!config.storageUrl || !config.storageKey)) {
-            return toast.error("At least one external configuration field is required.");
-        }
+    return (
+        <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--color-primary)' }}></div>
+
+            <div style={{ marginBottom: '1rem' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Save size={20} color="var(--color-primary)" /> Database Configuration (MongoDB)
+                </h3>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '5px' }}>
+                    Connect your own MongoDB cluster.
+                </p>
+            </div>
+
+            {isConfigured && !showForm ? (
+                <div style={{ marginTop: '1rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10B981', fontWeight: 600, marginBottom: '0.5rem' }}>
+                        <CheckCircle size={18} />
+                        Connected
+                    </div>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setShowForm(true)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-main)' }}>
+                        Update URI
+                    </button>
+                </div>
+            ) : (
+                <div style={{ marginTop: '1rem' }}>
+                    <div className="form-group">
+                        <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>MongoDB Connection URI</label>
+                        <input
+                            type="password"
+                            className="input-field"
+                            placeholder="mongodb+srv://user:pass@cluster.mongodb.net/..."
+                            value={dbUri}
+                            onChange={(e) => setDbUri(e.target.value)}
+                            style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff', fontFamily: 'monospace' }}
+                        />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '1rem' }}>
+                        {isConfigured && <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>}
+                        <button onClick={handleUpdate} className="btn btn-primary" disabled={loading}>
+                            {loading ? 'Saving...' : 'Connect Database'}
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function StorageConfigForm({ project, projectId, token }) {
+    const [config, setConfig] = useState({
+        storageUrl: '',
+        storageKey: '',
+        storageProvider: 'supabase'
+    });
+    const [loading, setLoading] = useState(false);
+    const isConfigured = project?.resources?.storage?.isExternal || false;
+    const [showForm, setShowForm] = useState(!isConfigured);
+
+    useEffect(() => {
+        const configured = project?.resources?.storage?.isExternal || false;
+        setShowForm(!configured);
+    }, [project]);
+
+    const handleChange = (e) => setConfig({ ...config, [e.target.name]: e.target.value });
+
+    const handleUpdate = async () => {
+        if (!config.storageUrl || !config.storageKey) return toast.error("URL and Key are required");
 
         setLoading(true);
         try {
@@ -190,145 +268,88 @@ function ExternalConfigForm({ project, projectId, token }) {
                 config,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            toast.success("External configuration updated successfully!");
-
-            // Update local state to reflect success
-            setIsConfigured(true);
+            toast.success("Storage configuration updated!");
             setShowForm(false);
-
-            setConfig({
-                dbUri: '',
-                storageUrl: '',
-                storageKey: '',
-                storageProvider: 'supabase'
-            });
+            setConfig({ storageUrl: '', storageKey: '', storageProvider: 'supabase' });
         } catch (err) {
-            toast.error(err.response?.data?.error || "Failed to update configuration");
+            toast.error(err.response?.data?.error || "Failed to update Storage config");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="card" style={{ marginBottom: '2rem', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'linear-gradient(to bottom, var(--color-primary), #34d399)' }}></div>
+        <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: '#34d399' }}></div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Save size={20} color="var(--color-primary)" /> External Configuration (BYOD)
+                    <Save size={20} color="#34d399" /> Storage Configuration
                 </h3>
                 <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem', marginTop: '5px' }}>
-                    Connect your own high-performance database and storage to scale beyond the free tier limits.
+                    Connect your own S3-compatible storage.
                 </p>
+            </div>
 
-                {isConfigured && !showForm ? (
-                    <div style={{ marginTop: '1.5rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1.5rem', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#10B981', fontWeight: 600, marginBottom: '0.5rem', fontSize: '1.1rem' }}>
-                            <CheckCircle size={20} />
-                            Connected Successfully
+            {isConfigured && !showForm ? (
+                <div style={{ marginTop: '1rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#10B981', fontWeight: 600, marginBottom: '0.5rem' }}>
+                        <CheckCircle size={18} />
+                        Connected
+                    </div>
+                    <button className="btn btn-secondary btn-sm" onClick={() => setShowForm(true)} style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-main)' }}>
+                        Update Config
+                    </button>
+                </div>
+            ) : (
+                <div style={{ marginTop: '1rem', display: 'grid', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                        <div className="form-group">
+                            <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Storage URL</label>
+                            <input
+                                type="text"
+                                name="storageUrl"
+                                className="input-field"
+                                value={config.storageUrl}
+                                onChange={handleChange}
+                                placeholder="https://..."
+                                style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff' }}
+                            />
                         </div>
-                        <p style={{ fontSize: '0.95rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
-                            Your project is currently using external resources.
-                        </p>
-                        <button
-                            className="btn btn-outline"
-                            onClick={() => setShowForm(true)}
-                            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-main)' }}
-                        >
-                            Update Configuration
+                        <div className="form-group">
+                            <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Provider</label>
+                            <select
+                                name="storageProvider"
+                                className="input-field"
+                                value={config.storageProvider}
+                                onChange={handleChange}
+                                style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff' }}
+                            >
+                                <option value="supabase">Supabase</option>
+                                <option value="aws" disabled>AWS S3 (Coming Soon)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Storage Key / Service Role</label>
+                        <input
+                            type="password"
+                            name="storageKey"
+                            className="input-field"
+                            value={config.storageKey}
+                            onChange={handleChange}
+                            placeholder="Key..."
+                            style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff', fontFamily: 'monospace' }}
+                        />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '1rem' }}>
+                        {isConfigured && <button className="btn btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>}
+                        <button onClick={handleUpdate} className="btn btn-primary" disabled={loading}>
+                            {loading ? 'Saving...' : 'Connect Storage'}
                         </button>
                     </div>
-                ) : (
-                    <div style={{ marginTop: '1.5rem' }}>
-                        <div style={{ background: 'rgba(255, 189, 46, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255, 189, 46, 0.2)', marginBottom: '1.5rem', display: 'flex', gap: '10px' }}>
-                            <AlertTriangle size={20} color="#FFBD2E" style={{ flexShrink: 0, marginTop: '2px' }} />
-                            <p style={{ color: '#FFBD2E', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                                {isConfigured
-                                    ? "Updating this configuration will overwrite your existing connection details."
-                                    : "Bring Your Own Database (BYOD). Connect a MongoDB Atlas URI and S3-compatible storage."}
-                            </p>
-                        </div>
-
-                        <div style={{ display: 'grid', gap: '1.5rem' }}>
-                            <div className="form-group">
-                                <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Database URI (MongoDB)</label>
-                                <input
-                                    type="password"
-                                    name="dbUri"
-                                    className="input-field"
-                                    placeholder="mongodb+srv://user:pass@cluster.mongodb.net/..."
-                                    value={config.dbUri}
-                                    onChange={handleChange}
-                                    style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff', fontFamily: 'monospace' }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                <div className="form-group">
-                                    <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Storage URL</label>
-                                    <input
-                                        type="text"
-                                        name="storageUrl"
-                                        className="input-field"
-                                        placeholder="https://..."
-                                        value={config.storageUrl}
-                                        onChange={handleChange}
-                                        style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff' }}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Storage Provider</label>
-                                    <select
-                                        name="storageProvider"
-                                        className="input-field"
-                                        value={config.storageProvider}
-                                        onChange={handleChange}
-                                        style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff' }}
-                                    >
-                                        <option value="supabase">Supabase</option>
-                                        <option value="aws">AWS S3 (Coming Soon)</option>
-                                        <option value="cloudinary">Cloudinary (Coming Soon)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label className="form-label" style={{ marginBottom: '8px', display: 'block', fontSize: '0.9rem' }}>Storage Key / Service Role Key</label>
-                                <input
-                                    type="password"
-                                    name="storageKey"
-                                    className="input-field"
-                                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                                    value={config.storageKey}
-                                    onChange={handleChange}
-                                    style={{ width: '100%', padding: '12px', background: 'var(--color-bg-input)', border: '1px solid var(--color-border)', borderRadius: '8px', color: '#fff', fontFamily: 'monospace' }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '1rem' }}>
-                                {isConfigured && (
-                                    <button
-                                        className="btn btn-ghost"
-                                        onClick={() => setShowForm(false)}
-                                        style={{ padding: '10px 20px', color: 'var(--color-text-muted)' }}
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
-                                <button
-                                    onClick={handleUpdateConfig}
-                                    className="btn btn-primary"
-                                    disabled={loading}
-                                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '10px 24px' }}
-                                >
-                                    <Save size={18} />
-                                    {loading ? 'Updating...' : 'Update Configuration'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

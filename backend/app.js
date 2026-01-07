@@ -2,6 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
 const app = express();
 app.set('trust proxy', true);
 const GC = require('./utils/GC');
@@ -12,8 +13,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const dashboardLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    message: { error: "Dashboard usage limit exceeded. Slow down!" },
+    skip: (req) => process.env.NODE_ENV === 'development',
+});
 
-const adminWhitelist = ['http://localhost:5173', 'https://urbackend.bitbros.in'];
+
+const adminWhitelist = ['https://urbackend.bitbros.in'];
 
 const adminCorsOptions = {
     origin: function (origin, callback) {
@@ -39,16 +47,15 @@ const userAuthRoute = require('./routes/userAuth');
 const storageRoute = require('./routes/storage');
 
 // ROUTES SETUP 
-app.use('/api/', limiter); // Rate Limiter
-app.use('/api/auth', authRoute); // Developer Auth
-app.use('/api/projects', projectRoute); // Project Mgmt
+app.use('/api/auth', dashboardLimiter, authRoute); // Developer Auth
+app.use('/api/projects', dashboardLimiter, projectRoute); // Project Mgmt
 
 // Logger added to userAuth route
-app.use('/api/userAuth', logger, userAuthRoute);
+app.use('/api/userAuth', limiter, logger, userAuthRoute);
 
 // Data & Storage Routes (Protected)
-app.use('/api/data', cors(adminCorsOptions), logger, dataRoute);
-app.use('/api/storage', cors(adminCorsOptions), logger, storageRoute);
+app.use('/api/data', limiter, cors(adminCorsOptions), logger, dataRoute);
+app.use('/api/storage', limiter, cors(adminCorsOptions), logger, storageRoute);
 
 // Test Route
 app.get('/', (req, res) => {

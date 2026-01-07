@@ -170,7 +170,7 @@ console.log(data);
 
                         <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Specific Limits</h3>
                         <ul style={{ listStyle: 'disc', paddingLeft: '20px', color: '#ddd', lineHeight: '1.8' }}>
-                            <li><strong>File Upload Size:</strong> Maximum 5 MB per single file.</li>
+                            <li><strong>File Upload Size:</strong> Maximum 10 MB per single file.</li>
                             <li><strong>Log Retention:</strong> API Logs are capped at 50MB or 50,000 entries (older logs are auto-deleted).</li>
                             <li><strong>Response Timeout:</strong> Requests taking longer than 10 seconds may be terminated.</li>
                         </ul>
