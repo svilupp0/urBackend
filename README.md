@@ -35,59 +35,6 @@ Stop writing boilerplate. Get an instant Database, Authentication, and Storage A
 - Multer (File Handling)
 - Supabase (Cloud Storage)
 
-## 🚀 Getting Started
-
-Follow these instructions to set up the project locally.
-
-### Prerequisites
-- Node.js (v18+)
-- MongoDB Atlas Connection URL
-- Supabase Account (for Storage)
-
-### 1. Backend Setup
-
-```bash
-cd backend
-npm install
-```
-
-Create a `.env` file in the `backend` folder:
-
-```env
-PORT=1234
-MONGO_URL=your_mongodb_connection_string
-JWT_SECRET=your_super_secret_key
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_anon_key
-```
-
-Start the server:
-
-```bash
-npm start
-# Server will run on https://api.urbackend.bitbros.in
-```
-
-### 2. Frontend Setup
-
-```bash
-cd frontend
-npm install
-```
-
-Update `frontend/src/config.js` (if necessary):
-
-```javascript
-export const API_URL = 'https://api.urbackend.bitbros.in';
-```
-
-Start the client:
-
-```bash
-npm run dev
-# App will run on http://localhost:5173
-```
-
 ## 📖 API Usage Guide
 
 Once your project is created in the dashboard, use your **Public API Key** to make requests.
@@ -243,11 +190,7 @@ await fetch('https://api.urbackend.bitbros.in/api/storage/file', {
 
 ## 🤝 Contributing
 
-1. Fork the Repository
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started, development workflow, and our code of conduct.
 
 ---
 
