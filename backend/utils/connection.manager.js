@@ -40,14 +40,8 @@ async function getConnection(projectId) {
     });
 
     connection.on("error", (err) => {
-        console.error(`❌ Connection error [${projectId}]:`, err);
-        registry.delete(key);
-    });
-
-    connection.on("close", () => {
-        registry.delete(key);
-        console.log(`🔌 Connection closed: ${key}`);
-        registry.delete(key);
+        console.error("❌ Connection error [%s]:", projectId, err);
+        registry.delete(key); 
     });
 
     connection.on("close", () => {
