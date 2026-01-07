@@ -47,6 +47,12 @@ async function getConnection(projectId) {
     connection.on("close", () => {
         registry.delete(key);
         console.log(`🔌 Connection closed: ${key}`);
+        registry.delete(key);
+    });
+
+    connection.on("close", () => {
+        registry.delete(key);
+        console.log(`🔌 Connection closed: ${key}`);
     });
 
     connection.lastAccessed = new Date();
