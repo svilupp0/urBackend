@@ -1,3 +1,8 @@
+![Build Status](https://img.shields.io/github/actions/workflow/status/yash-pouranik/urbackend/ci.yml?branch=main)
+![License](https://img.shields.io/github/license/yash-pouranik/urbackend)
+![Issues](https://img.shields.io/github/issues/yash-pouranik/urbackend)
+![Stars](https://img.shields.io/github/stars/yash-pouranik/urbackend)
+
 # urBackend 🚀
 
 urBackend is an instant **"Backend-as-a-Service" (BaaS)** platform designed for frontend developers. It empowers you to create projects, define database schemas, manage authentication, and handle file storage without writing a single line of backend code.
@@ -194,4 +199,16 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for deta
 
 ---
 
-Built with ❤️ by **Yash Pouranik**
+## 🗺️ Roadmap & Upcoming Features
+
+UrBackend is just getting started. Here’s what’s on the horizon:
+- [ ] **MongoDB**: Apis for more complex queries on dashboard + for urbackend.
+- [ ] **Webhooks**: Notify your frontend on database changes.
+- [ ] **PostgreSQL Support**: Expand beyond MongoDB (Very tough but we will build together with the community ❤️).
+- [ ] **Plug-and-Play UI Components**: React components for login/signup.
+- [ ] **Advanced Logs**: Detailed API request tracing.
+- [ ] **Role-Based Access Control (RBAC)**: Fine-grained permissions.
+
+Want to see a feature? [Open an issue!](https://github.com/yash-pouranik/urbackend/issues)
+
+Built with ❤️ for **urbackend**

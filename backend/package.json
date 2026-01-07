@@ -8,7 +8,7 @@
     "test": "cross-env NODE_ENV=test jest --testTimeout=10000"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
     "bcryptjs": "^3.0.2",
