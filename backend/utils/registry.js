@@ -1,3 +1,3 @@
 const registry = new Map();
-
-module.exports = registry;
+const storageRegistry = new Map();
+module.exports = { registry, storageRegistry };

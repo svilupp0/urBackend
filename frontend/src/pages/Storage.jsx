@@ -60,7 +60,8 @@ export default function Storage() {
             toast.success("File uploaded!", { id: toastId });
             fetchFiles();
         } catch (err) {
-            toast.error("Upload failed", { id: toastId });
+            const backendError = err.response?.data?.error || "Upload failed";
+            toast.error(backendError, { id: toastId });
         } finally {
             setUploading(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -196,21 +197,6 @@ export default function Storage() {
                                     ) : (
                                         <File size={48} style={{ opacity: 0.2, color: '#fff' }} />
                                     )}
-
-                                    {/* Overlay Actions */}
-                                    <div className="file-actions" style={{
-                                        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                        background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(2px)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                                        opacity: 0, transition: 'opacity 0.2s'
-                                    }}>
-                                        <a href={file.publicUrl} target="_blank" rel="noreferrer" className="action-btn" title="View">
-                                            <ExternalLink size={18} />
-                                        </a>
-                                        <button onClick={() => handleDelete(file.path)} className="action-btn delete" title="Delete">
-                                            <Trash2 size={18} />
-                                        </button>
-                                    </div>
                                 </div>
 
                                 {/* Details Area */}
@@ -218,11 +204,52 @@ export default function Storage() {
                                     <div style={{ fontWeight: 500, marginBottom: '6px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.9rem', color: 'var(--color-text-main)' }} title={file.name}>
                                         {file.name.split('_').slice(1).join('_') || file.name}
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                                         <span>{formatBytes(file.metadata?.size)}</span>
                                         <span style={{ textTransform: 'uppercase', fontSize: '0.7rem', background: 'var(--color-bg-input)', padding: '2px 6px', borderRadius: '4px' }}>
                                             {file.metadata?.mimetype?.split('/')[1] || 'FILE'}
                                         </span>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: 'auto' }}>
+                                        <a
+                                            href={file.publicUrl}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="btn btn-sm"
+                                            style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: '0.4rem',
+                                                background: 'var(--color-bg-input)',
+                                                color: 'var(--color-text-main)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: '6px',
+                                                textDecoration: 'none'
+                                            }}
+                                        >
+                                            <ExternalLink size={14} style={{ marginRight: '4px' }} /> View
+                                        </a>
+                                        <button
+                                            onClick={() => handleDelete(file.path)}
+                                            className="btn btn-sm"
+                                            style={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                padding: '0.4rem',
+                                                background: 'rgba(234, 84, 85, 0.1)',
+                                                color: '#ea5455',
+                                                border: '1px solid rgba(234, 84, 85, 0.2)',
+                                                borderRadius: '6px'
+                                            }}
+                                        >
+                                            <Trash2 size={14} style={{ marginRight: '4px' }} /> Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -232,16 +259,7 @@ export default function Storage() {
             )}
 
             <style>{`
-                .file-preview:hover .file-actions { opacity: 1; }
                 .file-preview:hover img { transform: scale(1.05); }
-                .action-btn {
-                    width: 36px; height: 36px; border-radius: 50%;
-                    display: flex; alignItems: center; justifyContent: center;
-                    background: #fff; color: #000; border: none; cursor: pointer;
-                    transition: transform 0.2s;
-                }
-                .action-btn:hover { transform: scale(1.1); }
-                .action-btn.delete { background: #ea5455; color: #fff; }
             `}</style>
         </div>
     );

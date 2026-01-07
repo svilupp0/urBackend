@@ -1,7 +1,7 @@
 const { sanitize } = require("../utils/input.validation");
 const mongoose = require('mongoose');
 const Project = require("../models/Project");
-const { getConnection } = require("../utils/connectionManager");
+const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel");
 
 // Helper: CodeQL ko satisfy karne ke liye ID validate karna zaroori hai
@@ -42,7 +42,7 @@ module.exports.insertData = async (req, res) => {
         const safeData = sanitize(cleanData);
 
         let docSize = 0;
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             docSize = Buffer.byteLength(JSON.stringify(safeData));
             if ((project.databaseUsed || 0) + docSize > project.databaseLimit) {
                 return res.status(403).json({ error: "Database limit exceeded." });
@@ -50,11 +50,11 @@ module.exports.insertData = async (req, res) => {
         }
 
         const connection = await getConnection(project._id);
-        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         const result = await Model.create(safeData);
 
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             project.databaseUsed = (project.databaseUsed || 0) + docSize;
             await project.save();
         }
@@ -75,7 +75,7 @@ module.exports.getAllData = async (req, res) => {
         if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
         const connection = await getConnection(project._id);
-        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         const data = await Model.find({}).limit(100).lean();
         res.json(data);
@@ -97,7 +97,7 @@ module.exports.getSingleDoc = async (req, res) => {
         if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
         const connection = await getConnection(project._id);
-        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         const doc = await Model.findById(id).lean();
         if (!doc) return res.status(404).json({ error: "Document not found." });
@@ -121,7 +121,7 @@ module.exports.updateSingleData = async (req, res) => {
         if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
         const connection = await getConnection(project._id);
-        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         // Strict Schema Validation
         const schemaRules = collectionConfig.model;
@@ -161,19 +161,19 @@ module.exports.deleteSingleDoc = async (req, res) => {
         if (!collectionConfig) return res.status(404).json({ error: "Collection not found" });
 
         const connection = await getConnection(project._id);
-        const Model = getCompiledModel(connection, collectionConfig, project._id, project.isExternal);
+        const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         const docToDelete = await Model.findById(id);
         if (!docToDelete) return res.status(404).json({ error: "Document not found." });
 
         let docSize = 0;
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             docSize = Buffer.byteLength(JSON.stringify(docToDelete));
         }
 
         await Model.deleteOne({ _id: id });
 
-        if (!project.isExternal) {
+        if (!project.resources.db.isExternal) {
             project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
             await project.save();
         }

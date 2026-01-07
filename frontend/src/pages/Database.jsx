@@ -244,7 +244,7 @@ export default function Database() {
     );
 
     const JsonView = () => (
-        <div className="json-container fade-in">
+        <div className="json-container fade-in" style={{ height: '100%', overflowY: 'auto' }}>
             <pre className="json-pre">
                 {JSON.stringify(data, null, 2)}
             </pre>

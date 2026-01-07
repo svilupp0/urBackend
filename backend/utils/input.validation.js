@@ -48,3 +48,31 @@ module.exports.sanitize = (obj) => {
     }
     return clean;
 };
+
+const emptyToUndefined = z.preprocess((val) => (val === "" || val === null ? undefined : val), z.string().optional());
+
+module.exports.updateExternalConfigSchema = z.object({
+    // DB URI: No .url() check because of mongodb+srv
+    dbUri: z.preprocess((val) => (val === "" || val === null ? undefined : val),
+        z.string().optional().refine(val => !val || val.startsWith('mongodb'), {
+            message: "Invalid Database URI format."
+        })
+    ),
+
+    // Storage URL: Sirf tab check karega jab value empty na ho
+    storageUrl: z.preprocess((val) => (val === "" || val === null ? undefined : val),
+        z.string().url("Invalid Storage URL format").optional()
+    ),
+
+    storageKey: emptyToUndefined,
+    storageProvider: z.enum(['supabase', 'aws', 'cloudinary']).optional()
+}).refine(data => {
+    // Condition 1: Agar Storage URL diya hai, toh Storage Key bhi honi chahiye
+    if (data.storageUrl && !data.storageKey) return false;
+    // Condition 2: Agar Storage Key di hai, toh Storage URL bhi hona chahiye
+    if (data.storageKey && !data.storageUrl) return false;
+    // Condition 3: Kam se kam ek cheez (DB ya Storage) poori honi chahiye
+    return !!(data.dbUri || (data.storageUrl && data.storageKey));
+}, {
+    message: "Provide either a DB URI or a complete Storage config (URL + Key)."
+});
