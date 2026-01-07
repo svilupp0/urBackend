@@ -23,6 +23,11 @@ const dashboardLimiter = rateLimit({
 
 const adminWhitelist = ['https://urbackend.bitbros.in'];
 
+// to allow localhost in developmentt
+if (process.env.NODE_ENV === 'development') {
+    adminWhitelist.push('http://localhost:5173');
+}
+
 const adminCorsOptions = {
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl)
