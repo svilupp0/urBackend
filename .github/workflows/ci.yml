@@ -24,7 +24,9 @@ jobs:
       - name: Run Jest Tests
         run: cd backend && npm test
         env:
-          MONGO_URL: ${{ secrets.MONGO_URL_TEST }} # Mock or Test DB
+          NODE_ENV: test
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          TEST_MONGO_URL: ${{ secrets.MONGO_URL_TEST }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
   frontend-lint:

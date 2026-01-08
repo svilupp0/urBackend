@@ -3,7 +3,7 @@ const { Resend } = require('resend');
 const dotenv = require('dotenv');
 
 dotenv.config();
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_key_for_testing');
 
 async function sendOtp(email, otp) {
     try {

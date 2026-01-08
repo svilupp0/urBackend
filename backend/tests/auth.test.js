@@ -1,9 +1,22 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
+
+jest.mock('resend', () => {
+    return {
+        Resend: jest.fn().mockImplementation(() => ({
+            emails: {
+                send: jest.fn().mockResolvedValue({ data: { id: 'mock_id' }, error: null }),
+            },
+        })),
+    };
+});
+
 const app = require('../app');
 const Developer = require('../models/Developer');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
+
+
 
 // --- SETUP 
 beforeAll(async () => {
