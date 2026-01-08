@@ -50,14 +50,6 @@ export default function Database() {
         fetchProject();
     }, [projectId, token, searchParams]);
 
-    // Fetch Data on Collection Change
-    useEffect(() => {
-        if (!activeCollection) return;
-        setSearchParams({ collection: activeCollection.name });
-        fetchData();
-        if (window.innerWidth <= 768) setIsSidebarOpen(false);
-    }, [activeCollection, fetchData, setSearchParams]);
-
     const fetchData = useCallback(async () => {
         if (!activeCollection) return;
         setLoadingData(true);
@@ -73,6 +65,14 @@ export default function Database() {
             setLoadingData(false);
         }
     }, [activeCollection, projectId, token]);
+
+    // Fetch Data on Collection Change
+    useEffect(() => {
+        if (!activeCollection) return;
+        setSearchParams({ collection: activeCollection.name });
+        fetchData();
+        if (window.innerWidth <= 768) setIsSidebarOpen(false);
+    }, [activeCollection, fetchData, setSearchParams]);
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this document?")) return;
@@ -92,7 +92,7 @@ export default function Database() {
         e.preventDefault();
         try {
             const formattedData = { ...newData };
-            activeCollection.model.forEach(field => {
+            (activeCollection.model || []).forEach(field => {
                 if (field.type === 'Number') formattedData[field.key] = Number(formattedData[field.key]);
                 if (field.type === 'Boolean') formattedData[field.key] = formattedData[field.key] === 'true';
             });
@@ -201,7 +201,7 @@ export default function Database() {
                 <thead>
                     <tr>
                         <th className="w-12">#</th>
-                        {activeCollection.model.map(field => (
+                        {(activeCollection.model || []).map(field => (
                             <th key={field.key}>
                                 <div className="th-content">
                                     {field.key}
@@ -217,7 +217,7 @@ export default function Database() {
                     {data.map((row, i) => (
                         <tr key={row._id} className="table-row">
                             <td className="text-muted">{i + 1}</td>
-                            {activeCollection.model.map(field => (
+                            {(activeCollection.model || []).map(field => (
                                 <td key={field.key}>
                                     {typeof row[field.key] === 'boolean' ? (
                                         <span className={`status-badge ${row[field.key] ? 'success' : 'danger'}`}>
@@ -364,7 +364,7 @@ export default function Database() {
                             </button>
                         </div>
                         <form onSubmit={handleAddDocument} className="modal-body">
-                            {activeCollection.model.map(field => (
+                            {(activeCollection.model || []).map(field => (
                                 <div key={field.key} className="form-group">
                                     <label className="form-label">
                                         {field.key}
