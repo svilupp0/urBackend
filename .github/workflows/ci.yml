@@ -9,6 +9,11 @@ on:
 jobs:
   backend-tests:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -26,7 +31,7 @@ jobs:
         env:
           NODE_ENV: test
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          TEST_MONGO_URL: ${{ secrets.MONGO_URL_TEST }}
+          TEST_MONGO_URL: mongodb://localhost:27017/test_db
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SUPABASE_URL: "https://dummy.supabase.co"
           SUPABASE_KEY: "dummy-key"

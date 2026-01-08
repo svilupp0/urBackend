@@ -20,10 +20,14 @@ require('dotenv').config();
 
 // --- SETUP 
 beforeAll(async () => {
-    // Connect to the TEST Database
     const uri = process.env.TEST_MONGO_URL;
-    if (!uri) {
-        throw new Error("TEST_MONGO_URL not defined in .env");
+
+    // Debugging (Secret is masked as *** in GitHub logs, but we can check the format)
+    console.log("URI Length:", uri ? uri.length : 0);
+    console.log("URI Starts with mongodb:", uri ? uri.startsWith('mongodb') : false);
+
+    if (!uri || !uri.startsWith('mongodb')) {
+        throw new Error(`Invalid TEST_MONGO_URL! Received: ${uri ? 'invalid format' : 'nothing'}`);
     }
 
     await mongoose.disconnect();
