@@ -4,7 +4,7 @@ const cors = require('cors')
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 const GC = require('./utils/GC');
 dotenv.config();
 
@@ -39,6 +39,11 @@ const adminCorsOptions = {
     },
     credentials: true
 };
+
+if (process.env.NODE_ENV !== 'test') {
+    GC.garbageCollect();
+    GC.storageGarbageCollect();
+}
 
 
 // IMPORTS 
