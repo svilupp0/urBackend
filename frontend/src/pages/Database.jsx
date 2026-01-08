@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -43,12 +43,12 @@ export default function Database() {
                 } else if (res.data.collections.length > 0) {
                     setActiveCollection(res.data.collections[0]);
                 }
-            } catch (err) {
+            } catch {
                 toast.error("Failed to load project");
             }
         };
         fetchProject();
-    }, [projectId, token]);
+    }, [projectId, token, searchParams]);
 
     // Fetch Data on Collection Change
     useEffect(() => {
@@ -56,9 +56,9 @@ export default function Database() {
         setSearchParams({ collection: activeCollection.name });
         fetchData();
         if (window.innerWidth <= 768) setIsSidebarOpen(false);
-    }, [activeCollection]);
+    }, [activeCollection, fetchData, setSearchParams]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         if (!activeCollection) return;
         setLoadingData(true);
         try {
@@ -72,7 +72,7 @@ export default function Database() {
         } finally {
             setLoadingData(false);
         }
-    };
+    }, [activeCollection, projectId, token]);
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this document?")) return;

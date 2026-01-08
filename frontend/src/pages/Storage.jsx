@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -17,22 +17,22 @@ export default function Storage() {
     const fileInputRef = useRef(null);
 
     // 1. Fetch Files
-    const fetchFiles = async () => {
+    const fetchFiles = useCallback(async () => {
         try {
             const res = await axios.get(`${API_URL}/api/projects/${projectId}/storage/files`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFiles(res.data);
-        } catch (err) {
+        } catch {
             toast.error("Failed to load files");
         } finally {
             setLoading(false);
         }
-    };
+    }, [projectId, token]);
 
     useEffect(() => {
         if (token) fetchFiles();
-    }, [projectId, token]);
+    }, [projectId, token, fetchFiles]);
 
     // 2. Handle File Upload
     const handleFileSelect = async (e) => {
@@ -83,7 +83,7 @@ export default function Storage() {
             );
             setFiles(files.filter(f => f.path !== path));
             toast.success("File deleted");
-        } catch (err) {
+        } catch {
             toast.error("Failed to delete file");
         }
     };
@@ -104,7 +104,7 @@ export default function Storage() {
             });
             setFiles([]);
             toast.success("All files deleted.");
-        } catch (err) {
+        } catch {
             toast.error("Failed to clear storage");
         } finally {
             setDeletingAll(false);

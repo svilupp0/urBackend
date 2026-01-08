@@ -497,10 +497,21 @@ module.exports.updateProject = async (req, res) => {
 module.exports.deleteProject = async (req, res) => {
     try {
         const projectId = req.params.projectId;
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id })
-            .select("+resources.storage.config.encrypted +resources.storage.config.iv +resources.storage.config.tag resources.storage.isExternal storageUsed storageLimit");
-        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
 
+        const project = await Project.findOne({
+            _id: projectId,
+            owner: req.user._id
+        }).select(
+            "+resources.storage.config.encrypted " +
+            "+resources.storage.config.iv " +
+            "+resources.storage.config.tag"
+        );
+
+        if (!project) {
+            return res.status(404).json({ error: "Project not found or access denied." });
+        }
+
+        // collections WILL exist now
         for (const col of project.collections) {
             const collectionName = `${project._id}_${col.name}`;
             try {
@@ -533,7 +544,6 @@ module.exports.deleteProject = async (req, res) => {
             }
         }
 
-
         await Project.deleteOne({ _id: projectId });
         storageRegistry.delete(projectId.toString());
 
@@ -542,7 +552,8 @@ module.exports.deleteProject = async (req, res) => {
         console.error(err);
         res.status(500).json({ error: err.message });
     }
-}
+};
+
 
 module.exports.analytics = async (req, res) => {
     try {

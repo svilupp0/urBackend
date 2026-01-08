@@ -18,7 +18,6 @@ export default function NotFound() {
 
     // Typewriter effect simulation (adds lines one by one initially)
     useEffect(() => {
-        let currentText = [];
         const initialLogs = ['> Initializing search sequence...', '> Analyzing request headers...', '> Checking neural pathways...', '> Searching /dev/null...', '> Error: 404 - Page Data Corrupted.', '> System halted.'];
 
         setTerminalText([]); // Start empty

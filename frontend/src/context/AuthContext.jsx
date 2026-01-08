@@ -1,44 +1,19 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { API_URL } from '../config';
+import { createContext, useState, useContext } from 'react';
 
-// 1. Create the Context object
 const AuthContext = createContext(null);
 
-// 2. Create the Provider component (Wraps the whole app)
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // Stores user details like ID, email
-    const [token, setToken] = useState(localStorage.getItem('devToken') || null); // Stores JWT
-    const [loading, setLoading] = useState(true); // To show loading spinner while checking localstorage
-
-    // Check localStorage on initial load (Page Refresh)
-    useEffect(() => {
-        const storedToken = localStorage.getItem('devToken');
-        const storedUser = localStorage.getItem('devUser');
-
-        if (storedToken && storedUser) {
-            setToken(storedToken);
-            // We parse the stringified user object back to JSON
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch (error) {
-                console.error("Failed to parse stored user data");
-                logout(); // Clear invalid data
-            }
+    const [token, setToken] = useState(localStorage.getItem('devToken') || null);
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = localStorage.getItem('devUser');
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch {
+            return null;
         }
-        setLoading(false); // Finished checking
-    }, []);
+    });
 
-    // Function to run on successful login/signup
-    const login = (userData, authToken) => {
-        setUser(userData);
-        setToken(authToken);
-        // Save to browser storage
-        localStorage.setItem('devToken', authToken);
-        // Save user details as string
-        localStorage.setItem('devUser', JSON.stringify(userData));
-    };
-
-    // Function to run on logout
+    // 1. Move logout here (before useEffect)
     const logout = () => {
         setUser(null);
         setToken(null);
@@ -46,27 +21,18 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('devUser');
     };
 
-    const value = {
-        user,
-        token,
-        login,
-        logout,
-        isAuthenticated: !!token, // True if token exists
+    const login = (userData, authToken) => {
+        setUser(userData);
+        setToken(authToken);
+        localStorage.setItem('devToken', authToken);
+        localStorage.setItem('devUser', JSON.stringify(userData));
     };
 
-    // Don't render anything until we check localStorage
-    if (loading) {
-        return <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white' }}>Loading...</div>;
-    }
+    const value = { user, token, login, logout, isAuthenticated: !!token };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {children}
-        </AuthContext.Provider>
-    );
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom Hook to use auth easily in other components
-export const useAuth = () => {
-    return useContext(AuthContext);
-};
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => useContext(AuthContext);

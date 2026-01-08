@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,7 @@ export default function Analytics() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setRefreshing(true);
             const res = await axios.get(`${API_URL}/api/projects/${projectId}/analytics`, {
@@ -26,11 +26,11 @@ export default function Analytics() {
             setLoading(false);
             setRefreshing(false);
         }
-    };
+    }, [projectId, token]);
 
     useEffect(() => {
         fetchData();
-    }, [projectId, token]);
+    }, [fetchData]);
 
     if (loading) return <div className="container" style={{ display: 'flex', justifyContent: 'center', marginTop: '4rem', color: '#666' }}>Loading Analytics...</div>;
 

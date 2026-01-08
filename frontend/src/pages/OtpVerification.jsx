@@ -10,62 +10,44 @@ function OtpVerification() {
     const location = useLocation();
     const { user, token, login } = useAuth(); // Destructure login
     const [otp, setOtp] = useState('');
-    const [email, setEmail] = useState('');
-
+    const [email] = useState(location.state?.email || user?.email || '');
     // Ref to track if we have already auto-sent OTP to prevent double sends in StrictMode
     const hasSentOtp = useRef(false);
 
     useEffect(() => {
-        // Get email from navigation state or local storage via context
-        if (location.state?.email) {
-            setEmail(location.state.email);
-        } else if (user?.email) {
-            setEmail(user.email);
 
-            // If we are here via user context (likely from Settings) and haven't sent yet
-            if (!hasSentOtp.current && !user.isVerified) {
-                hasSentOtp.current = true;
-                // Auto-send OTP
-                const sendOtpPromise = axios.post(`${API_URL}/api/auth/send-otp`, { email: user.email });
-                toast.promise(sendOtpPromise, {
-                    loading: 'Sending OTP...',
-                    success: 'OTP Sent!',
-                    error: 'Failed to send OTP'
-                });
-            }
-        } else if (!token) {
+        if (!email && !token) {
             navigate('/login');
+            return;
         }
-    }, [location, user, token, navigate]);
 
-    const handleChange = (e) => {
-        setOtp(e.target.value);
-    };
+        if (email && !hasSentOtp.current && (!user || !user.isVerified)) {
+            hasSentOtp.current = true;
+            const sendOtpPromise = axios.post(`${API_URL}/api/auth/send-otp`, { email });
+            toast.promise(sendOtpPromise, {
+                loading: 'Sending OTP...',
+                success: 'OTP sent to your email!',
+                error: 'Failed to send OTP'
+            });
+        }
+    }, [email, token, navigate, user]);
 
     const handleVerify = async (e) => {
         e.preventDefault();
         const loadingToast = toast.loading('Verifying OTP...');
-
         try {
             const res = await axios.post(`${API_URL}/api/auth/verify-otp`, { email, otp });
-
             toast.dismiss(loadingToast);
             toast.success('Email verified successfully!');
 
-            // Update Auth Context with new token and updated user status
             if (res.data.token) {
-                // Construct updated user object (assuming we keep existing data but set verified)
-                // If backend sent full user, better. If not, patch it.
-                // Since we rely on token for future requests, that's key. 
-                // But context also holds user object.
                 const updatedUser = { ...user, isVerified: true };
                 login(updatedUser, res.data.token);
             }
-
             navigate('/dashboard');
-        } catch (err) {
+        } catch {
             toast.dismiss(loadingToast);
-            toast.error(err.response?.data?.error || 'Verification failed');
+            toast.error('Verification failed');
         }
     };
 
@@ -75,9 +57,9 @@ function OtpVerification() {
             await axios.post(`${API_URL}/api/auth/send-otp`, { email });
             toast.dismiss(loadingToast);
             toast.success('OTP sent successfully!');
-        } catch (err) {
+        } catch {
             toast.dismiss(loadingToast);
-            toast.error(err.response?.data?.error || 'Failed to send OTP');
+            toast.error('Failed to send OTP');
         }
     };
 
@@ -85,18 +67,21 @@ function OtpVerification() {
         navigate('/dashboard');
     };
 
-    // Styles (Dark Theme)
+    const handleChange = (e) => {
+        setOtp(e.target.value);
+    };
+
     const containerStyle = {
         minHeight: '100vh',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'var(--color-bg-main)', // Assuming you have these vars
+        backgroundColor: 'var(--color-bg-main)',
         color: 'var(--color-text-main)',
     };
 
     const cardStyle = {
-        backgroundColor: 'var(--color-bg-secondary)', // Or card background
+        backgroundColor: 'var(--color-bg-secondary)',
         padding: '2rem',
         borderRadius: '8px',
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)',

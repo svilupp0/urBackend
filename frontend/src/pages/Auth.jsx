@@ -16,22 +16,23 @@ export default function Auth() {
     const [searchTerm, setSearchTerm] = useState('');
 
     // 1. Fetch Users (We fetch from the 'users' collection internally)
-    const fetchUsers = async () => {
-        try {
-            const res = await axios.get(
-                `${API_URL}/api/projects/${projectId}/collections/users/data`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setUsers(res.data);
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to load users");
-        } finally {
-            setLoading(false);
-        }
-    };
-
+    // 1. Fetch Users (We fetch from the 'users' collection internally)
     useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const res = await axios.get(
+                    `${API_URL}/api/projects/${projectId}/collections/users/data`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setUsers(res.data);
+            } catch (err) {
+                console.error(err);
+                toast.error("Failed to load users");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         if (token) fetchUsers();
     }, [projectId, token]);
 
@@ -46,7 +47,7 @@ export default function Auth() {
             );
             setUsers(users.filter(user => user._id !== id));
             toast.success("User deleted");
-        } catch (err) {
+        } catch {
             toast.error("Failed to delete user");
         }
     };

@@ -29,7 +29,7 @@ export default function ProjectSettings() {
                 setProject(res.data);
                 // Set initial name for renaming
                 setNewName(res.data.name);
-            } catch (err) {
+            } catch {
                 toast.error("Failed to load project");
             } finally {
                 setLoading(false);
@@ -51,7 +51,7 @@ export default function ProjectSettings() {
             toast.success("Project renamed successfully!");
             // Update local state to reflect change immediately
             setProject(prev => ({ ...prev, name: newName }));
-        } catch (err) {
+        } catch {
             toast.error("Failed to rename project");
         } finally {
             setRenaming(false);
@@ -69,7 +69,7 @@ export default function ProjectSettings() {
             });
             toast.success("Project deleted");
             navigate('/dashboard');
-        } catch (err) {
+        } catch {
             toast.error("Failed to delete project");
         }
     };

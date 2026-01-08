@@ -26,7 +26,7 @@ function ProjectDetails() {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setProject(res.data);
-            } catch (err) {
+            } catch {
                 toast.error("Failed to load project details");
             } finally {
                 setLoading(false);
@@ -45,7 +45,7 @@ function ProjectDetails() {
             });
             setNewKey(res.data.apiKey);
             toast.success("New API Key Generated!");
-        } catch (err) {
+        } catch {
             toast.error("Failed to regenerate key");
         } finally {
             setIsRegenerating(false);
