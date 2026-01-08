@@ -12,21 +12,12 @@ import CreateCollection from './pages/CreateCollection';
 import NotFound from './pages/NotFound';
 import Analytics from './pages/Analytics';
 
-// 1. Import Database Page
 import Database from './pages/Database';
-
-// 2. Import Storage Page
 import Storage from './pages/Storage';
-
-// 3. Import Docs Page
 import Docs from './pages/Docs';
-
 import Auth from './pages/Auth';
 import OtpVerification from './pages/OtpVerification';
-
-
 import Settings from './pages/Settings';
-
 import ProjectSettings from './pages/ProjectSettings';
 
 
@@ -77,7 +68,6 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* 2. Database Route */}
         <Route path="/project/:projectId/database" element={
           <ProtectedRoute>
             <MainLayout>
@@ -86,15 +76,14 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* 2. Register Storage Route */}
         <Route path="/project/:projectId/storage" element={<ProtectedRoute><MainLayout><Storage /></MainLayout></ProtectedRoute>} />
 
-        {/* 3. Register Docs Route */}
+
         <Route path="/docs" element={
           <Docs />
         } />
 
-        {/* 2. Add Analytics Route */}
+
         <Route path="/project/:projectId/analytics" element={
           <ProtectedRoute>
             <MainLayout>
@@ -103,13 +92,10 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* 2. Register Auth Route */}
         <Route path="/project/:projectId/auth" element={<ProtectedRoute><MainLayout><Auth /></MainLayout></ProtectedRoute>} />
 
-        {/* 2. Register Settings Route */}
         <Route path="/settings" element={<ProtectedRoute><MainLayout><Settings /></MainLayout></ProtectedRoute>} />
 
-        {/* Project Specific Settings (New) */}
         <Route path="/project/:projectId/settings" element={<ProtectedRoute><MainLayout><ProjectSettings /></MainLayout></ProtectedRoute>} />
 
 
@@ -121,7 +107,6 @@ function App() {
           </ProtectedRoute>
         } />
 
-        {/* 2. Catch-all 404 Route (Sabse last mein hona chahiye) */}
         <Route path="*" element={<NotFound />} />
 
       </Routes>

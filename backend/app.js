@@ -46,7 +46,7 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 
-// IMPORTS 
+// rate limiter and loggerr IMPORTS 
 const { limiter, logger } = require('./middleware/api_usage');
 
 // Route Imports
@@ -59,11 +59,7 @@ const storageRoute = require('./routes/storage');
 // ROUTES SETUP 
 app.use('/api/auth', dashboardLimiter, authRoute); // Developer Auth
 app.use('/api/projects', dashboardLimiter, projectRoute); // Project Mgmt
-
-// Logger added to userAuth route
 app.use('/api/userAuth', limiter, logger, userAuthRoute);
-
-// Data & Storage Routes (Protected)
 app.use('/api/data', limiter, cors(adminCorsOptions), logger, dataRoute);
 app.use('/api/storage', limiter, cors(adminCorsOptions), logger, storageRoute);
 
@@ -72,7 +68,7 @@ app.get('/', (req, res) => {
     res.status(200).json({ status: "success", message: "urBackend API is running 🚀" })
 });
 
-//  FAULT TOLERANCE: Global Error Handler
+// Global Error Handler
 app.use((err, req, res, next) => {
     if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
         return res.status(400).json({
@@ -87,7 +83,7 @@ app.use((err, req, res, next) => {
         message: err.message
     });
 });
-//  DB CONNECTION & SERVER START 
+//  DB and server initialization
 // (Only connect if NOT in Test Mode)
 if (process.env.NODE_ENV !== 'test') {
 
@@ -121,7 +117,7 @@ if (process.env.NODE_ENV !== 'test') {
         console.log(`Server running on port ${PORT}`);
     });
 
-    // 🛡️ GRACEFUL SHUTDOWN
+    // handle gracefll shutdwn
     const gracefulShutdown = async () => {
         console.log('🛑 SIGTERM/SIGINT received. Shutting down gracefully...');
 

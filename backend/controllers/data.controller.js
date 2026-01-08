@@ -4,10 +4,10 @@ const Project = require("../models/Project");
 const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel");
 
-// Helper: CodeQL ko satisfy karne ke liye ID validate karna zaroori hai
+// Validate MongoDB ObjectId
 const isValidId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// 1. INSERT DATA
+// INSERT DATA
 module.exports.insertData = async (req, res) => {
     try {
         const { collectionName } = req.params;
@@ -38,7 +38,7 @@ module.exports.insertData = async (req, res) => {
             }
         }
 
-        // Sanitize removes MongoDB operators like $ne, $gt etc.
+        // Prevnt NoSQL injection
         const safeData = sanitize(cleanData);
 
         let docSize = 0;
@@ -65,7 +65,7 @@ module.exports.insertData = async (req, res) => {
     }
 };
 
-// 2. GET ALL DATA
+// GET ALL DATA
 module.exports.getAllData = async (req, res) => {
     try {
         const { collectionName } = req.params;
@@ -84,13 +84,13 @@ module.exports.getAllData = async (req, res) => {
     }
 };
 
-// 3. GET SINGLE DOC
+// GET SINGLE DOC
 module.exports.getSingleDoc = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
         const project = req.project;
 
-        // CodeQL Fix: User input ID ko pehle validate karo
+        // ensure valid mongose objct id
         if (!isValidId(id)) return res.status(400).json({ error: "Invalid ID format." });
 
         const collectionConfig = project.collections.find(c => c.name === collectionName);
@@ -108,7 +108,7 @@ module.exports.getSingleDoc = async (req, res) => {
     }
 };
 
-// 4. UPDATE DATA
+// UPDATE DATA
 module.exports.updateSingleData = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
@@ -149,7 +149,7 @@ module.exports.updateSingleData = async (req, res) => {
     }
 };
 
-// 5. DELETE DATA
+// DELETE DATA
 module.exports.deleteSingleDoc = async (req, res) => {
     try {
         const { collectionName, id } = req.params;
