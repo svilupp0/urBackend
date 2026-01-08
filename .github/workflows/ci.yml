@@ -28,6 +28,8 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           TEST_MONGO_URL: ${{ secrets.MONGO_URL_TEST }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SUPABASE_URL: "https://dummy.supabase.co"
+          SUPABASE_KEY: "dummy-key"
 
   frontend-lint:
     runs-on: ubuntu-latest

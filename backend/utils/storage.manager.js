@@ -3,8 +3,8 @@ const { createClient } = require("@supabase/supabase-js");
 const { decrypt } = require("./encryption");
 
 const defaultSupabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_KEY
+    process.env.SUPABASE_URL || "https://dummy.supabase.co",
+    process.env.SUPABASE_KEY || "dummy-key"
 );
 
 async function getStorage(project) {
