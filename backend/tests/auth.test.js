@@ -1,6 +1,15 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.NODE_ENV === "test" ? "ci_test_jwt_secret" : null);
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined");
+}
+
+
 jest.mock('resend', () => {
     return {
         Resend: jest.fn().mockImplementation(() => ({
