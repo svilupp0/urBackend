@@ -2,7 +2,7 @@
 ![License](https://img.shields.io/github/license/yash-pouranik/urbackend)
 ![Issues](https://img.shields.io/github/issues/yash-pouranik/urbackend)
 ![Stars](https://img.shields.io/github/stars/yash-pouranik/urbackend)
-![DISCORD](https://discord.gg/CXJjvJkNWn)
+[DISCORD](https://discord.gg/CXJjvJkNWn)
 
 # urBackend 🚀
 
