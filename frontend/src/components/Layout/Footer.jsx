@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Github, Twitter, Linkedin, ArrowRight, Database } from 'lucide-react';
+import { Github, ArrowRight, Database } from 'lucide-react';
 
 export default function Footer() {
     return (
@@ -27,41 +27,30 @@ export default function Footer() {
 
                     {/* Navigation Columns */}
                     <div className="footer-nav-grid">
+
                         <div className="footer-col">
                             <h4>Product</h4>
-                            <Link to="/#features">Database</Link>
-                            <Link to="/#features">Auth</Link>
-                            <Link to="/#features">Storage</Link>
-                            <Link to="/pricing">Pricing</Link>
-                        </div>
-                        <div className="footer-col">
-                            <h4>Resources</h4>
+                            <a href="/#features">Features</a>
+                            <a href="/#use-cases">Use Cases</a>
+                            <a href="/#how-it-works">How it Works</a>
                             <Link to="/docs">Documentation</Link>
-                            <Link to="/docs">API Reference</Link>
-                            <Link to="/community">Community</Link>
-                            <a href="https://github.com/yash-pouranik" target="_blank" rel="noreferrer">GitHub</a>
                         </div>
+
                         <div className="footer-col">
-                            <h4>Company</h4>
-                            <Link to="/about">About</Link>
-                            <Link to="/blog">Blog</Link>
-                            <Link to="/careers">Careers</Link>
-                            <Link to="/contact">Contact</Link>
+                            <h4>Connect</h4>
+                            <a href="https://discord.gg/CXJjvJkNWn" target="_blank" rel="noreferrer">Discord</a>
+                            <a href="https://github.com/yash-pouranik/urBackend" target="_blank" rel="noreferrer">Github</a>
+                            <a href="mailto:yashpouranik124@gmail.com">Email</a>
                         </div>
                     </div>
                 </div>
 
-                {/* Middle: Socials & Legal (Also Centered) */}
                 <div className="footer-middle">
                     <div className="social-links">
-                        <a href="#" className="social-icon"><Github size={20} /></a>
-                        <a href="#" className="social-icon"><Twitter size={20} /></a>
-                        <a href="#" className="social-icon"><Linkedin size={20} /></a>
+                        <a href="https://github.com/yash-pouranik/urBackend" target="_blank" className="social-icon"><Github size={20} /></a>
                     </div>
                     <div className="legal-links">
                         <span>&copy; 2025 urBackend Inc.</span>
-                        <Link to="/privacy">Privacy</Link>
-                        <Link to="/terms">Terms</Link>
                     </div>
                 </div>
 
