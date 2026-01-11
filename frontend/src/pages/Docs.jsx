@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Terminal, Database, Shield, HardDrive, Check, Server, Menu, X, ChevronDown, AlertCircle, Zap } from 'lucide-react';
+import { Copy, Terminal, Database, Shield, HardDrive, Check, Server, Menu, X, ChevronDown, AlertCircle, Zap, AlertTriangle } from 'lucide-react';
 import { API_URL } from '../config';
 
 import Footer from '../components/Layout/Footer';
@@ -88,6 +88,28 @@ console.log(data);
         </div>
     );
 
+    // Helper for Error Status Codes Table
+    const ErrorTable = ({ errors }) => (
+        <div style={{ margin: '1rem 0', overflowX: 'auto' }}>
+            <table style={{ width: '100%', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
+                <thead>
+                    <tr style={{ borderBottom: '1px solid #333', textAlign: 'left' }}>
+                        <th style={{ padding: '8px', color: '#888' }}>Status Code</th>
+                        <th style={{ padding: '8px', color: '#888' }}>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {errors.map((e, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid #222' }}>
+                            <td style={{ padding: '8px', fontFamily: 'monospace', color: 'var(--color-primary)' }}>{e.code}</td>
+                            <td style={{ padding: '8px', color: '#ddd' }}>{e.desc}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+
     const renderContent = () => {
         switch (activeTab) {
             case 'intro':
@@ -127,6 +149,27 @@ console.log(data);
                             { name: 'x-api-key', type: 'String', required: true, desc: 'Your Project API Key (Found in Dashboard)' },
                             { name: 'Content-Type', type: 'String', required: true, desc: 'application/json (except for file uploads)' },
                             { name: 'Authorization', type: 'String', required: false, desc: 'Bearer <USER_TOKEN> (For protected user routes)' },
+                        ]} />
+                    </div>
+                );
+
+            case 'errors':
+                return (
+                    <div className="fade-in">
+                        <h2 className="page-title" style={{ marginBottom: '1rem' }}>Error Reference</h2>
+                        <p style={{ color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
+                            Common HTTP status codes and their meanings when making API requests.
+                        </p>
+
+                        <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <AlertTriangle size={18} /> Status Codes
+                        </h3>
+                        <ErrorTable errors={[
+                            { code: '400 Bad Request', desc: 'Invalid JSON or missing required schema fields.' },
+                            { code: '401 Unauthorized', desc: 'Invalid or missing API Key/JWT Token.' },
+                            { code: '403 Forbidden', desc: 'Resource limits exceeded (e.g., database or storage quota).' },
+                            { code: '404 Not Found', desc: 'Collection or document does not exist.' },
+                            { code: '500 Internal Server Error', desc: 'Unexpected server-side issues.' },
                         ]} />
                     </div>
                 );
@@ -359,7 +402,8 @@ console.log("File URL:", result.url);
                     <ul style={{ listStyle: 'none', padding: 0 }}>
                         {[
                             { id: 'intro', label: 'Introduction', icon: Terminal },
-                            { id: 'limits', label: 'Limits & Quotas', icon: AlertCircle }, // New Tab
+                            { id: 'errors', label: 'Error Reference', icon: AlertTriangle },
+                            { id: 'limits', label: 'Limits & Quotas', icon: AlertCircle },
                             { id: 'auth', label: 'Authentication', icon: Shield },
                             { id: 'data', label: 'Database & API', icon: Database },
                             { id: 'storage', label: 'Storage', icon: HardDrive },
