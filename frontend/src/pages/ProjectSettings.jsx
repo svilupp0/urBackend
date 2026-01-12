@@ -11,7 +11,7 @@ export default function ProjectSettings() {
   const { projectId } = useParams();
   const { token } = useAuth();
   const navigate = useNavigate();
-  //used showModal to open the Confirmation model
+  // Used to control the Confirmation modal visibility
   const [showModal, setShowModal] = useState(false);
 
   // Existing State
