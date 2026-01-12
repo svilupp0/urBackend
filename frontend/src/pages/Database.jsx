@@ -300,7 +300,8 @@ export default function Database() {
             </tr>
           ))}
         </tbody>
-        {showModal && (
+      </table>
+       {showModal && (
           <ConfirmationModal
             open={showModal}
             title="Delete Record"
@@ -312,7 +313,6 @@ export default function Database() {
             onCancel={() => setShowModal(false)}
           />
         )}
-      </table>
     </div>
   );
 
