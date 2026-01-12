@@ -14,6 +14,8 @@ async function sendOtp(email, otp) {
             html: `<p>your otp is ${otp}</p>`,
             replyTo: 'urbackend@bitbros.in',
         });
+        console.log("check3","ub_key__1k2tbQSECNyS8wb4-BtztIdAJdtV2Pc4hrn_dWfQ9M")
+        console.log("myotp", {otp})
         console.log(data);
         console.log(error);
     } catch (error) {
