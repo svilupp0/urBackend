@@ -150,8 +150,8 @@ module.exports.verifyOtp = async (req, res) => {
         const existingOtp = await otpSchema.findOne({ userId: existingUser._id });
         if (!existingOtp) return res.status(400).json({ error: "You havn't requested an OTP" });
 
-        console.log("check1",existingOtp.otp);
-        console.log("check for ",otp);
+        console.log(existingOtp.otp);
+        console.log(otp);
         if (existingOtp.otp !== otp) return res.status(400).json({ error: "Incorrect OTP" });
 
         await existingOtp.deleteOne();
