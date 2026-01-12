@@ -24,7 +24,7 @@ const logger = (req, res, next) => {
         res.on('finish', async () => {
             if (req.project) {
                 try {
-                    await Log.create({
+                    Log.create({
                         projectId: req.project._id,
                         method: req.method,
                         path: req.originalUrl,
