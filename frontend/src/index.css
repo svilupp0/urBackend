@@ -1,4 +1,5 @@
 /* --- GLOBAL DESIGN SYSTEM (Premium / Supabase-like) --- */
+@import "tailwindcss";
 :root {
   /* Colors - Core Black Theme (Supabase-like) */
   --color-primary: #3ECF8E;

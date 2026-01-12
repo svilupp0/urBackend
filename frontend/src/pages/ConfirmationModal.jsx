@@ -10,19 +10,19 @@ function ConfirmationModal({ open, title, message, onConfirm, onCancel }) {
       onClick={onCancel}
     >
       <div
-        className="bg-white w-[380px] rounded-2xl shadow-lg px-6 py-5 confirmationModal"
+        className="bg-[var(--color-bg-card)] border border-[var(--color-border)] w-[380px] rounded-2xl shadow-lg px-6 py-5 confirmationModal"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start gap-3 mb-4">
           <AlertTriangle className="text-red-600 mt-1" size={22} />
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 id="modal-title" className="text-lg font-semibold text-[var(--color-text-main)]">
             {title}
           </h2>
         </div>
 
         {/* Message */}
-        <p className="text-sm text-gray-600 leading-relaxed mb-6 confirmationModal">
+        <p id="modal-description" className="text-sm text-[var(--color-text-muted)] leading-relaxed mb-6 confirmationModal">
           {message}
         </p>
 
@@ -30,14 +30,14 @@ function ConfirmationModal({ open, title, message, onConfirm, onCancel }) {
         <div className="flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100 confirmationModalBtn"
+            className="btn btn-secondary confirmationModalBtn"
           >
             Cancel
           </button>
 
           <button
             onClick={onConfirm}
-            className="px-4 py-2 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 confirmationModalBtn"
+            className="btn btn-danger confirmationModalBtn"
           >
             Delete
           </button>
