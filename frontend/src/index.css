@@ -1,5 +1,6 @@
 /* --- GLOBAL DESIGN SYSTEM (Premium / Supabase-like) --- */
 @import "tailwindcss";
+
 :root {
   /* Colors - Core Black Theme (Supabase-like) */
   --color-primary: #3ECF8E;
@@ -345,13 +346,15 @@ body {
 /* Mobile Response for Layout */
 @media (max-width: 768px) {
   .sidebar {
+    width: 260px;
     transform: translateX(-100%);
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
   }
 
   .sidebar.mobile-open {
     transform: translateX(0);
-    z-index: 1100; /* Higher than header (1000) */
+    z-index: 1100;
+    /* Higher than header (1000) */
   }
 
   .main-content {
@@ -481,50 +484,13 @@ body {
   }
 }
 
-/* --- GLOBAL LAYOUT STRUCTURE --- */
-.app-shell {
-  display: flex;
-  flex-direction: row;
-  min-height: 100vh;
-  background: var(--color-bg-main);
-}
-
-.sidebar {
-  width: var(--sidebar-width);
-  background: var(--color-bg-sidebar);
-  border-right: 1px solid var(--color-border);
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  z-index: 50;
-  overflow-y: auto;
-}
-
-.main-content {
-  flex: 1;
-  margin-left: var(--sidebar-width);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  transition: margin-left 0.3s ease;
-}
-
-/* Full-width variant for project routes (no sidebar) */
-.main-content.full-width {
-  margin-left: 0;
-}
-
-.content-wrapper {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-}
-.confirmationModal{
+/* Confirmation Modal */
+.confirmationModal {
   padding: 1rem;
 }
-.confirmationModalBtn{
-      padding: 5px;
-    width: 5rem;
+
+.confirmationModalBtn {
+  padding: 5px;
+  width: 5rem;
 
 }

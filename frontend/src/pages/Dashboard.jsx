@@ -163,9 +163,6 @@ export default function Dashboard() {
                                     }}>
                                         <Database size={24} />
                                     </div>
-                                    <span style={{ fontSize: '0.7rem', fontWeight: 600, padding: '4px 10px', borderRadius: '20px', background: 'var(--color-bg-input)', color: 'var(--color-text-muted)', border: '1px solid var(--color-border)' }}>
-                                        ACTIVE
-                                    </span>
                                 </div>
 
                                 <h3 style={{ fontSize: '1.2rem', fontWeight: '600', color: 'var(--color-text-main)', marginBottom: '8px', letterSpacing: '-0.01em' }}>
@@ -196,10 +193,10 @@ export default function Dashboard() {
                                     fontSize: '0.85rem'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <Database size={16} /> <span>Postgres</span>
+                                        <Database size={16} /> <span>MongoDB</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <HardDrive size={16} /> <span>50MB</span>
+                                        <HardDrive size={16} /> <span>{project.storageLimit ? Math.round(project.storageLimit / (1024 * 1024)) : 20}MB</span>
                                     </div>
                                     <div style={{ marginLeft: 'auto', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500, fontSize: '0.8rem' }}>
                                         View Project <ArrowRight size={14} />

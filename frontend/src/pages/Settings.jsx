@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import { Lock, Trash2, AlertTriangle, Save, CheckCircle } from 'lucide-react';
 import { API_URL } from '../config';
+import ConfirmationModal from './ConfirmationModal';
 
 export default function Settings() {
     const { token, logout } = useAuth();
@@ -15,6 +16,7 @@ export default function Settings() {
     // Delete Account State
     const [deletePass, setDeletePass] = useState('');
     const [loadingDelete, setLoadingDelete] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
 
     // Handle Password Change
     const handlePasswordChange = async (e) => {
@@ -33,13 +35,11 @@ export default function Settings() {
         }
     };
 
-    // Handle Delete Account
-    const handleDeleteAccount = async () => {
-        if (!window.confirm("ARE YOU SURE? This will delete ALL your projects and data permanently.")) return;
-
+    // Handle Delete Account - Final Step
+    const executeDeleteAccount = async () => {
         setLoadingDelete(true);
         try {
-            // DELETE requests mein body bhejne ke liye 'data' key use karni padti hai
+            // DELETE requests miein body bhejne ke liye 'data' key use karni padti hai
             await axios.delete(`${API_URL}/api/auth/delete-account`, {
                 headers: { Authorization: `Bearer ${token}` },
                 data: { password: deletePass }
@@ -49,9 +49,16 @@ export default function Settings() {
             logout(); // Log user out immediately
         } catch (err) {
             toast.error(err.response?.data || "Failed to delete account");
+            setShowDeleteModal(false); // Close modal on error so user can retry
         } finally {
             setLoadingDelete(false);
         }
+    };
+
+    // Open Modal
+    const handleDeleteClick = () => {
+        if (!deletePass) return toast.error("Please enter your password to confirm.");
+        setShowDeleteModal(true);
     };
 
     return (
@@ -176,13 +183,21 @@ export default function Settings() {
                         />
                     </div>
                     <button
-                        onClick={handleDeleteAccount}
+                        onClick={handleDeleteClick}
                         className="btn btn-danger"
                         disabled={loadingDelete || !deletePass}
                         style={{ width: '100%', justifyContent: 'center', background: '#ea5455', border: 'none', color: '#fff', padding: '12px', borderRadius: '8px' }}
                     >
                         {loadingDelete ? 'Deleting Account...' : <><Trash2 size={18} /> Delete My Account</>}
                     </button>
+
+                    <ConfirmationModal
+                        open={showDeleteModal}
+                        title="Delete Your Account?"
+                        message="This action is irreversible. All your projects, data, and API keys will be permanently erased."
+                        onConfirm={executeDeleteAccount}
+                        onCancel={() => setShowDeleteModal(false)}
+                    />
                 </div>
             </div>
         </div>

@@ -55,7 +55,7 @@ module.exports.createProject = async (req, res) => {
 module.exports.getAllProject = async (req, res) => {
     try {
         const projects = await Project.find({ owner: req.user._id }).select('-apiKey -jwtSecret');
-        res.status(200).json(projects); // Fixed: .json()
+        res.status(200).json(projects);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
