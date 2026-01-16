@@ -38,7 +38,13 @@ module.exports = async (req, res, next) => {
             });
         }
 
+        // Ensure defaults are present (crucial for lean objects or cached POJOs)
+        if (!project.resources) project.resources = {};
+        if (!project.resources.db) project.resources.db = { isExternal: false };
+        if (!project.resources.storage) project.resources.storage = { isExternal: false };
+
         req.project = project;
+        req.hashedApiKey = hashedApi;
         next();
     } catch (err) {
         res.status(500).json({ error: err.message });
