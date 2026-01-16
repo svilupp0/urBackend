@@ -2,11 +2,11 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 
 const JWT_SECRET =
-  process.env.JWT_SECRET ||
-  (process.env.NODE_ENV === "test" ? "ci_test_jwt_secret" : null);
+    process.env.JWT_SECRET ||
+    (process.env.NODE_ENV === "test" ? "ci_test_jwt_secret" : null);
 
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET is not defined");
+    throw new Error("JWT_SECRET is not defined");
 }
 
 
@@ -43,8 +43,11 @@ beforeAll(async () => {
     await mongoose.connect(uri);
 });
 
+const redis = require('../config/redis'); // Import redis client
+
 afterAll(async () => {
     await mongoose.connection.close();
+    await redis.quit(); // Close Redis connection
 });
 
 describe('Auth API Security', () => {
