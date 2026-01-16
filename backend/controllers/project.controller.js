@@ -11,6 +11,7 @@ const { URL } = require('url');
 const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel")
 const { storageRegistry } = require("../utils/registry");
+const { deleteProjectByApiKeyCache } = require("../services/redisCaching");
 
 
 
@@ -54,7 +55,10 @@ module.exports.createProject = async (req, res) => {
 
 module.exports.getAllProject = async (req, res) => {
     try {
-        const projects = await Project.find({ owner: req.user._id }).select('-apiKey -jwtSecret');
+        const projects = await Project.find({ owner: req.user._id })
+            .select('name description')
+            .lean();
+
         res.status(200).json(projects);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -80,6 +84,7 @@ module.exports.regenerateApiKey = async (req, res) => {
     try {
         const newApiKey = generateApiKey();
         const hashed = hashApiKey(newApiKey);
+
 
         const project = await Project.findOneAndUpdate(
             { _id: req.params.projectId, owner: req.user._id },

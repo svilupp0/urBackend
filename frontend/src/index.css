@@ -343,6 +343,10 @@ body {
   flex: 1;
 }
 
+.main-content.full-width {
+  margin-left: 0;
+}
+
 /* Mobile Response for Layout */
 @media (max-width: 768px) {
   .sidebar {
