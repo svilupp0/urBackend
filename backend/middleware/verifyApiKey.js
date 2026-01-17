@@ -18,8 +18,18 @@ module.exports = async (req, res, next) => {
 
         if (!project) {
             project = await Project.findOne({ apiKey: hashedApi })
+                .select(`
+                    owner
+                    resources
+                    collections
+                    databaseLimit
+                    databaseUsed
+                    storageLimit
+                    storageUsed
+                `)
                 .populate('owner', 'isVerified')
                 .lean();
+
 
             if (!project) {
                 return res.status(401).json({

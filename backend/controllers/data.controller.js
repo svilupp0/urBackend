@@ -55,8 +55,10 @@ module.exports.insertData = async (req, res) => {
         const result = await Model.create(safeData);
 
         if (!project.resources.db.isExternal) {
-            project.databaseUsed = (project.databaseUsed || 0) + docSize;
-            await project.save();
+            await Project.updateOne(
+                { _id: cachedProject._id },
+                { $inc: { databaseUsed: docSize } }
+            );
         }
 
         res.status(201).json(result);
