@@ -181,7 +181,7 @@ module.exports.deleteSingleDoc = async (req, res) => {
             let databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
             await Project.updateOne(
                 { _id: project._id },
-                { $inc: { databaseUsed } }
+                { $set: { databaseUsed } }
             );
         }
 
