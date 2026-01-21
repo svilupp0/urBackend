@@ -98,7 +98,7 @@ Cache is explicitly invalidated when:
 
 ---
 
-## 17-01-2026 - Handling Write Operations with RContext
+## 17-01-2026 - Handling Write Operations with Redis
 
 ### Context
 After introducing Redis caching for API-key middleware, `req.project` started coming from Redis instead of MongoDB. Redis returns plain JavaScript objects, not hydrated Mongoose documents.
