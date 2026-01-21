@@ -178,8 +178,11 @@ module.exports.deleteSingleDoc = async (req, res) => {
         await Model.deleteOne({ _id: id });
 
         if (!project.resources.db.isExternal) {
-            project.databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
-            await project.save();
+            let databaseUsed = Math.max(0, (project.databaseUsed || 0) - docSize);
+            await Project.updateOne(
+                { _id: project._id },
+                { $inc: { databaseUsed } }
+            );
         }
 
         res.json({ message: "Document deleted", id });

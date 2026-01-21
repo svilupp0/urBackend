@@ -11,7 +11,7 @@ const { URL } = require('url');
 const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel")
 const { storageRegistry } = require("../utils/registry");
-const { deleteProjectByApiKeyCache } = require("../services/redisCaching");
+const { deleteProjectByApiKeyCache, setProjectById, getProjectById } = require("../services/redisCaching");
 
 
 
@@ -68,10 +68,17 @@ module.exports.getAllProject = async (req, res) => {
 
 module.exports.getSingleProject = async (req, res) => {
     try {
-        const project = await Project.findOne({ _id: req.params.projectId, owner: req.user._id }).select('-apiKey -jwtSecret');
-        if (!project) return res.status(404).json({ error: "Project not found." });
+        let project;
+        project = await getProjectById(req.params.projectId);
+        let projectObj;
+        if (!project) {
+            project = await Project.findOne({ _id: req.params.projectId, owner: req.user._id }).select('-apiKey -jwtSecret');
+            if (!project) return res.status(404).json({ error: "Project not found." });
+            projectObj = project.toObject();
+            await setProjectById(req.params.projectId, project);
+        }
 
-        const projectObj = project.toObject();
+        projectObj = project;
         delete projectObj.apiKey;
         delete projectObj.jwtSecret;
         res.json(projectObj);
@@ -84,6 +91,10 @@ module.exports.regenerateApiKey = async (req, res) => {
     try {
         const newApiKey = generateApiKey();
         const hashed = hashApiKey(newApiKey);
+
+        const oldApiProj = await Project.findOne({ _id: req.params.projectId, owner: req.user._id }).select('apiKey');
+        if (!oldApiProj) return res.status(404).json({ error: "Project not found." });
+        await deleteProjectByApiKeyCache(oldApiProj.apiKey);
 
 
         const project = await Project.findOneAndUpdate(
