@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
@@ -19,6 +19,11 @@ import {
   FileText,
 } from "lucide-react";
 import { API_URL } from "../config";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 
 export default function Database() {
   const { projectId } = useParams();
@@ -169,8 +174,8 @@ export default function Database() {
           field.type === "Number"
             ? "number"
             : field.type === "Date"
-            ? "datetime-local"
-            : "text"
+              ? "datetime-local"
+              : "text"
         }
         className="input-field"
         placeholder={`Enter ${field.key}`}
@@ -227,9 +232,8 @@ export default function Database() {
             <div
               key={c._id}
               onClick={() => setActiveCollection(c)}
-              className={`collection-item ${
-                activeCollection?._id === c._id ? "active" : ""
-              }`}
+              className={`collection-item ${activeCollection?._id === c._id ? "active" : ""
+                }`}
             >
               <DbIcon size={16} className="col-icon" />
               <span className="col-name">{c.name}</span>
@@ -249,59 +253,140 @@ export default function Database() {
     </aside>
   );
 
-  const TableView = () => (
-    <div className="table-container fade-in">
-      <table className="modern-table">
-        <thead>
-          <tr>
-            <th className="w-12">#</th>
-            {(activeCollection.model || []).map((field) => (
-              <th key={field.key}>
-                <div className="th-content">
-                  {field.key}
-                  <span className="type-badge">{field.type}</span>
-                </div>
-              </th>
-            ))}
-            <th>ID</th>
-            <th className="w-10">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, i) => (
-            <tr key={row._id} className="table-row">
-              <td className="text-muted">{i + 1}</td>
-              {(activeCollection.model || []).map((field) => (
-                <td key={field.key}>
-                  {typeof row[field.key] === "boolean" ? (
-                    <span
-                      className={`status-badge ${
-                        row[field.key] ? "success" : "danger"
-                      }`}
-                    >
-                      {String(row[field.key])}
-                    </span>
-                  ) : (
-                    <span className="cell-text">{String(row[field.key])}</span>
-                  )}
-                </td>
-              ))}
-              <td className="font-mono text-xs text-muted">
-                {row._id.substring(0, 8)}...
-              </td>
-              <td>
-                <button
-                  className="btn-icon danger-hover"
-                  onClick={() => fetchShowModal(row._id)}
+  /* Column Resizer Component */
+  const Resizer = ({ header }) => {
+    return (
+      <div
+        onMouseDown={header.getResizeHandler()}
+        onTouchStart={header.getResizeHandler()}
+        className={`resizer ${header.column.getIsResizing() ? "isResizing" : ""
+          }`}
+      />
+    );
+  };
+
+  const TableView = () => {
+    const columns = useMemo(() => {
+      if (!activeCollection?.model) return [];
+
+      return [
+        {
+          id: "rowNumber",
+          header: "#",
+          cell: (info) => <span className="text-muted">{info.row.index + 1}</span>,
+          size: 50,
+          enableResizing: false,
+        },
+        ...activeCollection.model.map((field) => ({
+          header: () => (
+            <div className="th-content">
+              {field.key}
+              <span className="type-badge">{field.type}</span>
+            </div>
+          ),
+          accessorKey: field.key,
+          size: 200, // Default width
+          minSize: 100,
+          maxSize: 500,
+          cell: (info) => {
+            const value = info.getValue();
+            if (typeof value === "boolean") {
+              return (
+                <span
+                  className={`status-badge ${value ? "success" : "danger"}`}
                 >
-                  <Trash2 size={15} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-       {showModal && (
+                  {String(value)}
+                </span>
+              );
+            }
+            return (
+              <div className="cell-content" title={String(value)}>
+                {String(value)}
+              </div>
+            );
+          },
+        })),
+        {
+          id: "_id",
+          header: "ID",
+          accessorKey: "_id",
+          size: 150,
+          cell: (info) => (
+            <span className="font-mono text-xs text-muted">
+              {String(info.getValue()).substring(0, 8)}...
+            </span>
+          ),
+        },
+        {
+          id: "actions",
+          header: "Actions",
+          size: 80,
+          enableResizing: false,
+          cell: (info) => (
+            <button
+              className="btn-icon danger-hover"
+              onClick={() => fetchShowModal(info.row.original._id)}
+            >
+              <Trash2 size={15} />
+            </button>
+          ),
+        },
+      ];
+    }, [activeCollection]);
+
+    const table = useReactTable({
+      data,
+      columns,
+      columnResizeMode: "onChange",
+      getCoreRowModel: getCoreRowModel(),
+    });
+
+    return (
+      <div className="table-container fade-in">
+        <table className="tanstack-table" style={{ width: table.getTotalSize() }}>
+          <thead>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    style={{
+                      width: header.getSize(),
+                      position: "relative",
+                    }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    {header.column.getCanResize() && (
+                      <Resizer header={header} />
+                    )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody>
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="table-row">
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    style={{
+                      width: cell.column.getSize(),
+                    }}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {showModal && (
           <ConfirmationModal
             open={showModal}
             title="Delete Record"
@@ -313,8 +398,9 @@ export default function Database() {
             onCancel={() => setShowModal(false)}
           />
         )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const JsonView = () => (
     <div
@@ -371,18 +457,16 @@ export default function Database() {
 
                 <div className="view-toggle">
                   <button
-                    className={`toggle-btn ${
-                      viewMode === "table" ? "active" : ""
-                    }`}
+                    className={`toggle-btn ${viewMode === "table" ? "active" : ""
+                      }`}
                     onClick={() => setViewMode("table")}
                     title="Table View"
                   >
                     <TableIcon size={16} />
                   </button>
                   <button
-                    className={`toggle-btn ${
-                      viewMode === "json" ? "active" : ""
-                    }`}
+                    className={`toggle-btn ${viewMode === "json" ? "active" : ""
+                      }`}
                     onClick={() => setViewMode("json")}
                     title="JSON View"
                   >
@@ -578,6 +662,7 @@ export default function Database() {
                     flex-direction: column;
                     position: relative;
                     overflow: hidden;
+                    min-width: 0; /* Critical for flex child scrolling */
                 }
 
                 .db-header {
@@ -623,44 +708,86 @@ export default function Database() {
                     overflow: hidden; /* For table scroll */
                     padding: 0;
                     position: relative;
+                    min-width: 0; /* Critical for flex child scrolling */
                 }
 
                 /* Table Styling */
                 .table-container {
                     height: 100%;
                     overflow: auto;
-                }
-
-                .modern-table {
                     width: 100%;
-                    min-width: 800px;
-                    border-collapse: collapse;
                 }
 
-                .modern-table th {
+                .tanstack-table {
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    table-layout: fixed;
+                    min-width: 100%;
+                }
+
+                .tanstack-table th {
+                    box-sizing: border-box;
                     background: var(--color-bg-card);
                     position: sticky;
                     top: 0;
                     z-index: 5;
-                    padding: 12px 24px;
+                    padding: 12px 16px;
                     font-size: 0.8rem;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
                     color: var(--color-text-muted);
                     border-bottom: 1px solid var(--color-border);
+                    border-right: 1px solid var(--color-border);
                 }
 
-                .modern-table td {
-                    padding: 16px 24px;
+                .tanstack-table td {
+                    box-sizing: border-box;
+                    padding: 0; /* Removing padding from td to let inner div handle it */
                     background: transparent;
                     border-bottom: 1px solid rgba(255,255,255,0.05);
+                    border-right: 1px solid rgba(255,255,255,0.05);
                     font-size: 0.9rem;
                     transition: background 0.2s;
+                }
+                
+                .cell-content {
+                    padding: 12px 16px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    width: 100%;
+                    display: block;
+                }
+
+                .resizer {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    height: 100%;
+                    width: 5px;
+                    background: rgba(255, 255, 255, 0.1);
+                    cursor: col-resize;
+                    user-select: none;
+                    touch-action: none;
+                    opacity: 0;
+                    transition: opacity 0.2s;
+                }
+
+                .tanstack-table th:hover .resizer,
+                .resizer.isResizing {
+                    opacity: 1;
+                    background: var(--color-primary);
+                }
+
+                .tanstack-table th:last-child,
+                .tanstack-table td:last-child {
+                    border-right: none;
                 }
 
                 .table-row:hover td {
                     background: rgba(255,255,255,0.02);
                 }
+
                 
                 .type-badge {
                     font-size: 0.65rem;
