@@ -2,9 +2,12 @@ const redis = require("../config/redis");
 
 async function setProjectByApiKeyCache(api, project) {
     try {
+        console.time("json");
+        const data = JSON.stringify(project);
+        console.timeEnd("json");
         await redis.set(
             `project:apikey:${api}`,
-            JSON.stringify(project),
+            data,
             'EX',
             60 * 60 * 2
         );
@@ -17,7 +20,10 @@ async function getProjectByApiKeyCache(api) {
     try {
         const data = await redis.get(`project:apikey:${api}`);
         if (!data) return null;
-        return JSON.parse(data);
+        console.time("json parse")
+        const parsedData = JSON.parse(data)
+        console.timeEnd("json parse")
+        return parsedData;
     } catch (err) {
         console.log(err);
         return null;

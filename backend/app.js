@@ -30,12 +30,14 @@ if (process.env.NODE_ENV === 'development') {
 
 const adminCorsOptions = {
     origin: function (origin, callback) {
+        console.time("cors for admin chk")
         // Allow requests with no origin (like mobile apps or curl)
         if (!origin || adminWhitelist.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS for Admin access'));
         }
+        console.timeEnd("cors for admin chk")
     },
     credentials: true
 };

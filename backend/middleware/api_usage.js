@@ -2,6 +2,7 @@ const rateLimit = require('express-rate-limit');
 const Log = require('../models/Log');
 
 // Rate Limiter 
+
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
@@ -14,6 +15,7 @@ const limiter = rateLimit({
 
 // Logger 
 const logger = (req, res, next) => {
+    console.time("logger middleware")
     // Check for Data, Storage, AND UserAuth routes
     if (
         req.originalUrl.startsWith('/api/data') ||
@@ -38,6 +40,7 @@ const logger = (req, res, next) => {
             }
         });
     }
+    console.timeEnd("logger middleware")
     next();
 };
 

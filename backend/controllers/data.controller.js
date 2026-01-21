@@ -56,7 +56,7 @@ module.exports.insertData = async (req, res) => {
 
         if (!project.resources.db.isExternal) {
             await Project.updateOne(
-                { _id: cachedProject._id },
+                { _id: project._id },
                 { $inc: { databaseUsed: docSize } }
             );
         }
@@ -70,6 +70,7 @@ module.exports.insertData = async (req, res) => {
 // GET ALL DATA
 module.exports.getAllData = async (req, res) => {
     try {
+        console.time("getall")
         const { collectionName } = req.params;
         const project = req.project;
 
@@ -80,6 +81,7 @@ module.exports.getAllData = async (req, res) => {
         const Model = getCompiledModel(connection, collectionConfig, project._id, project.resources.db.isExternal);
 
         const data = await Model.find({}).limit(100).lean();
+        console.timeEnd("getall")
         res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
