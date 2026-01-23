@@ -11,7 +11,7 @@ const { URL } = require('url');
 const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel")
 const { storageRegistry } = require("../utils/registry");
-const { deleteProjectByApiKeyCache, setProjectById, getProjectById } = require("../services/redisCaching");
+const { deleteProjectByApiKeyCache, setProjectById, getProjectById, deleteProjectById } = require("../services/redisCaching");
 
 
 
@@ -194,6 +194,8 @@ module.exports.createCollection = async (req, res) => {
         project.collections.push({ name: collectionName, model: schema });
         await project.save();
 
+        await deleteProjectById(projectId);
+        await setProjectById(projectId, project);
         // Safe Response
         const projectObj = project.toObject();
         delete projectObj.apiKey;

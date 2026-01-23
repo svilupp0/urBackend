@@ -64,10 +64,20 @@ async function getProjectById(id) {
 }
 
 
+async function deleteProjectById(id) {
+    try {
+        await redis.del(`project:id:${id}`);
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+
 module.exports = {
     setProjectByApiKeyCache,
     getProjectByApiKeyCache,
     deleteProjectByApiKeyCache,
     setProjectById,
-    getProjectById
+    getProjectById,
+    deleteProjectById
 };
