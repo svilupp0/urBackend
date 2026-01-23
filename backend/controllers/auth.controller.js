@@ -115,6 +115,9 @@ module.exports.sendOtp = async (req, res) => {
     try {
         const { email } = onlyEmailSchema.parse(req.body);
         const otp = Math.floor(100000 + Math.random() * 900000);
+        console.log("==================================================");
+        console.log("🔒 GENERATED OTP FOR " + email + ":", otp);
+        console.log("==================================================");
         const existingUser = await Developer.findOne({ email });
         if (!existingUser) return res.status(400).json({ error: "User not found" });
 
@@ -150,8 +153,11 @@ module.exports.verifyOtp = async (req, res) => {
         const existingOtp = await otpSchema.findOne({ userId: existingUser._id });
         if (!existingOtp) return res.status(400).json({ error: "You havn't requested an OTP" });
 
-        console.log(existingOtp.otp);
-        console.log(otp);
+        console.log("==================================================");
+        console.log("🔍 VERIFYING OTP FOR " + email);
+        console.log("Expected:", existingOtp.otp);
+        console.log("Received:", otp);
+        console.log("==================================================");
         if (existingOtp.otp !== otp) return res.status(400).json({ error: "Incorrect OTP" });
 
         await existingOtp.deleteOne();
