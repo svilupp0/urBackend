@@ -1,29 +1,26 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import ConfirmationModal from "./ConfirmationModal";
+import AddRecordDrawer from "../components/AddRecordDrawer";
+import CollectionTable from "../components/CollectionTable";
+import DatabaseSidebar from "../components/DatabaseSidebar";
+import RowDetailDrawer from "../components/RowDetailDrawer";
+import RecordList from "../components/RecordList";
 import {
   Database as DbIcon,
   Plus,
-  Trash2,
   RefreshCw,
   Code,
   Table as TableIcon,
-  Search,
+  List as ListIcon,
   Menu,
-  X,
-  ChevronRight,
-  MoreVertical,
   FileText,
 } from "lucide-react";
+
 import { API_URL } from "../config";
-import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-} from "@tanstack/react-table";
 
 export default function Database() {
   const { projectId } = useParams();
@@ -36,14 +33,16 @@ export default function Database() {
   const [activeCollection, setActiveCollection] = useState(null);
   const [data, setData] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
-  const [viewMode, setViewMode] = useState("table");
+  const [viewMode, setViewMode] = useState("list");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newData, setNewData] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   //used showModal to open the Confirmation model
   const [showModal, setShowModal] = useState(false);
   //keeping track of the selected record in the collection
   const [selectedId, setSelectedId] = useState(null);
+  const [selectedRecord, setSelectedRecord] = useState(null); // For detail drawer
+
   const fetchShowModal = (id) => {
     setShowModal(true);
     setSelectedId(id);
@@ -97,6 +96,7 @@ export default function Database() {
   useEffect(() => {
     if (!activeCollection) return;
     setSearchParams({ collection: activeCollection.name });
+    setSelectedRecord(null); // Close any open record detail drawer
     fetchData();
     if (window.innerWidth <= 768) setIsSidebarOpen(false);
   }, [activeCollection, fetchData, setSearchParams]);
@@ -119,20 +119,12 @@ export default function Database() {
     }
   };
 
-  const handleAddDocument = async (e) => {
-    e.preventDefault();
+  const handleAddDocument = async (submittedData) => {
+    setIsSubmitting(true);
     try {
-      const formattedData = { ...newData };
-      (activeCollection.model || []).forEach((field) => {
-        if (field.type === "Number")
-          formattedData[field.key] = Number(formattedData[field.key]);
-        if (field.type === "Boolean")
-          formattedData[field.key] = formattedData[field.key] === "true";
-      });
-
       await axios.post(
         `${API_URL}/api/projects/${projectId}/collections/${activeCollection.name}/data`,
-        formattedData,
+        submittedData,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -140,267 +132,33 @@ export default function Database() {
 
       toast.success("Document added successfully");
       setIsAddModalOpen(false);
-      setNewData({});
       fetchData();
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || "Failed to add data");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const renderInput = (field) => {
-    const val = newData[field.key] || "";
-    if (field.type === "Boolean") {
-      return (
-        <div className="select-wrapper">
-          <select
-            className="input-field"
-            value={val}
-            onChange={(e) =>
-              setNewData({ ...newData, [field.key]: e.target.value })
-            }
-            required={field.required}
-          >
-            <option value="">Select Boolean...</option>
-            <option value="true">True</option>
-            <option value="false">False</option>
-          </select>
-        </div>
-      );
-    }
-    return (
-      <input
-        type={
-          field.type === "Number"
-            ? "number"
-            : field.type === "Date"
-              ? "datetime-local"
-              : "text"
-        }
-        className="input-field"
-        placeholder={`Enter ${field.key}`}
-        value={val}
-        onChange={(e) =>
-          setNewData({ ...newData, [field.key]: e.target.value })
-        }
-        required={field.required}
-      />
-    );
-  };
+
 
   // --- SUB-COMPONENTS --- //
 
-  const Sidebar = () => (
-    <aside className={`db-sidebar ${isSidebarOpen ? "open" : ""}`}>
-      <div className="sidebar-header-area">
-        <h3 className="section-title">
-          COLLECTIONS
-          <span className="badge">{collections.length}</span>
-        </h3>
-        <div className="sidebar-actions">
-          <button
-            className="btn-icon hide-desktop"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <X size={18} />
-          </button>
-          <button
-            className="btn-icon add-col-btn"
-            onClick={() => navigate(`/project/${projectId}/create-collection`)}
-            title="New Collection"
-          >
-            <Plus size={18} />
-          </button>
-        </div>
-      </div>
 
-      <div className="collection-list">
-        {collections.length === 0 ? (
-          <div className="empty-sidebar">
-            <p>No collections yet.</p>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() =>
-                navigate(`/project/${projectId}/create-collection`)
-              }
-            >
-              Create One
-            </button>
-          </div>
-        ) : (
-          collections.map((c) => (
-            <div
-              key={c._id}
-              onClick={() => setActiveCollection(c)}
-              className={`collection-item ${activeCollection?._id === c._id ? "active" : ""
-                }`}
-            >
-              <DbIcon size={16} className="col-icon" />
-              <span className="col-name">{c.name}</span>
-              {activeCollection?._id === c._id && (
-                <ChevronRight size={14} className="active-indicator" />
-              )}
-            </div>
-          ))
-        )}
-      </div>
 
-      <div className="sidebar-footer">
-        <div className="project-info">
-          <div className="dot"></div> {project?.name || "Project"}
-        </div>
-      </div>
-    </aside>
-  );
 
-  /* Column Resizer Component */
-  const Resizer = ({ header }) => {
-    return (
-      <div
-        onMouseDown={header.getResizeHandler()}
-        onTouchStart={header.getResizeHandler()}
-        className={`resizer ${header.column.getIsResizing() ? "isResizing" : ""
-          }`}
+
+  const TableView = () => (
+    <div className="table-container-wrapper" style={{ height: "100%", overflow: "hidden" }}>
+      <CollectionTable
+        data={data}
+        activeCollection={activeCollection}
+        onDelete={fetchShowModal}
+        onView={setSelectedRecord}
       />
-    );
-  };
-
-  const TableView = () => {
-    const columns = useMemo(() => {
-      if (!activeCollection?.model) return [];
-
-      return [
-        {
-          id: "rowNumber",
-          header: "#",
-          cell: (info) => <span className="text-muted">{info.row.index + 1}</span>,
-          size: 50,
-          enableResizing: false,
-        },
-        ...activeCollection.model.map((field) => ({
-          header: () => (
-            <div className="th-content">
-              {field.key}
-              <span className="type-badge">{field.type}</span>
-            </div>
-          ),
-          accessorKey: field.key,
-          size: 200, // Default width
-          minSize: 100,
-          maxSize: 500,
-          cell: (info) => {
-            const value = info.getValue();
-            if (typeof value === "boolean") {
-              return (
-                <span
-                  className={`status-badge ${value ? "success" : "danger"}`}
-                >
-                  {String(value)}
-                </span>
-              );
-            }
-            return (
-              <div className="cell-content" title={String(value)}>
-                {String(value)}
-              </div>
-            );
-          },
-        })),
-        {
-          id: "_id",
-          header: "ID",
-          accessorKey: "_id",
-          size: 150,
-          cell: (info) => (
-            <span className="font-mono text-xs text-muted">
-              {String(info.getValue()).substring(0, 8)}...
-            </span>
-          ),
-        },
-        {
-          id: "actions",
-          header: "Actions",
-          size: 80,
-          enableResizing: false,
-          cell: (info) => (
-            <button
-              className="btn-icon danger-hover"
-              onClick={() => fetchShowModal(info.row.original._id)}
-            >
-              <Trash2 size={15} />
-            </button>
-          ),
-        },
-      ];
-    }, [activeCollection]);
-
-    const table = useReactTable({
-      data,
-      columns,
-      columnResizeMode: "onChange",
-      getCoreRowModel: getCoreRowModel(),
-    });
-
-    return (
-      <div className="table-container fade-in">
-        <table className="tanstack-table" style={{ width: table.getTotalSize() }}>
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    style={{
-                      width: header.getSize(),
-                      position: "relative",
-                    }}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    {header.column.getCanResize() && (
-                      <Resizer header={header} />
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="table-row">
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    style={{
-                      width: cell.column.getSize(),
-                    }}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {showModal && (
-          <ConfirmationModal
-            open={showModal}
-            title="Delete Record"
-            message="Are you sure you want to delete this record? This action cannot be undone."
-            onConfirm={() => {
-              handleDelete(selectedId);
-              setShowModal(false);
-            }}
-            onCancel={() => setShowModal(false)}
-          />
-        )}
-      </div>
-    );
-  };
+    </div>
+  );
 
   const JsonView = () => (
     <div
@@ -429,7 +187,36 @@ export default function Database() {
         onClick={() => setIsSidebarOpen(false)}
       />
 
-      <Sidebar />
+      <DatabaseSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        collections={collections}
+        activeCollection={activeCollection}
+        setActiveCollection={setActiveCollection}
+        project={project}
+        navigate={navigate}
+        projectId={projectId}
+      />
+
+      <RowDetailDrawer
+        isOpen={!!selectedRecord}
+        onClose={() => setSelectedRecord(null)}
+        record={selectedRecord}
+        fields={activeCollection?.model || []}
+      />
+
+      {showModal && (
+        <ConfirmationModal
+          open={showModal}
+          title="Delete Record"
+          message="Are you sure you want to delete this record? This action cannot be undone."
+          onConfirm={() => {
+            handleDelete(selectedId);
+            setShowModal(false);
+          }}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
 
       <main className="db-main">
         {activeCollection ? (
@@ -457,10 +244,18 @@ export default function Database() {
 
                 <div className="view-toggle">
                   <button
+                    className={`toggle-btn ${viewMode === "list" ? "active" : ""
+                      }`}
+                    onClick={() => setViewMode("list")}
+                    title="List View"
+                  >
+                    <ListIcon size={16} />
+                  </button>
+                  <button
                     className={`toggle-btn ${viewMode === "table" ? "active" : ""
                       }`}
                     onClick={() => setViewMode("table")}
-                    title="Table View"
+                    title="Table View (Advanced)"
                   >
                     <TableIcon size={16} />
                   </button>
@@ -511,6 +306,12 @@ export default function Database() {
                     Add Document
                   </button>
                 </div>
+              ) : viewMode === "list" ? (
+                <RecordList
+                  data={data}
+                  activeCollection={activeCollection}
+                  onView={setSelectedRecord}
+                />
               ) : viewMode === "table" ? (
                 <TableView />
               ) : (
@@ -537,45 +338,16 @@ export default function Database() {
         )}
       </main>
 
-      {/* Add Document Modal */}
+      {/* Add Record Drawer */}
       {isAddModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content glass-panel slide-up">
-            <div className="modal-header">
-              <h3>Add New Document</h3>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="btn-icon"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleAddDocument} className="modal-body">
-              {(activeCollection.model || []).map((field) => (
-                <div key={field.key} className="form-group">
-                  <label className="form-label">
-                    {field.key}
-                    {field.required && <span className="text-danger">*</span>}
-                    <span className="field-type-hint">{field.type}</span>
-                  </label>
-                  {renderInput(field)}
-                </div>
-              ))}
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="btn btn-ghost"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  Create Document
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddRecordDrawer
+          key={activeCollection?._id}
+          isOpen={true}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAddDocument}
+          fields={activeCollection?.model || []}
+          isSubmitting={isSubmitting}
+        />
       )}
 
       <style>{`
@@ -588,72 +360,7 @@ export default function Database() {
                     position: relative;
                 }
 
-                /* Sidebar */
-                .db-sidebar {
-                    width: 280px;
-                    background: var(--color-bg-sidebar);
-                    border-right: 1px solid var(--color-border);
-                    display: flex;
-                    flex-direction: column;
-                    z-index: 100;
-                    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                }
 
-                .sidebar-header-area {
-                    padding: 1.5rem;
-                    border-bottom: 1px solid var(--color-border);
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                }
-
-                .section-title {
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    color: var(--color-text-muted);
-                    letter-spacing: 0.05em;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                }
-
-                .badge {
-                    background: rgba(255,255,255,0.1);
-                    padding: 2px 6px;
-                    border-radius: 4px;
-                    color: white;
-                    font-size: 0.7rem;
-                }
-                
-                .collection-list {
-                    flex: 1;
-                    overflow-y: auto;
-                    padding: 1rem;
-                }
-
-                .collection-item {
-                    padding: 10px 12px;
-                    margin-bottom: 4px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
-                    color: var(--color-text-muted);
-                    transition: all 0.2s;
-                    border: 1px solid transparent;
-                }
-
-                .collection-item:hover {
-                    background: rgba(255,255,255,0.03);
-                    color: var(--color-text-main);
-                }
-
-                .collection-item.active {
-                    background: rgba(62, 207, 142, 0.1);
-                    color: var(--color-primary);
-                    border-color: rgba(62, 207, 142, 0.2);
-                }
 
                 /* Main Content Area */
                 .db-main {

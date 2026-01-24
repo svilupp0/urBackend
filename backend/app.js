@@ -1,12 +1,13 @@
+const dotenv = require('dotenv');
+dotenv.config();
+
 const express = require('express')
 const mongoose = require('mongoose')
 const cors = require('cors')
-const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
 const app = express();
 app.set('trust proxy', 1);
 const GC = require('./utils/GC');
-dotenv.config();
 
 // Middleware
 app.use(cors());
