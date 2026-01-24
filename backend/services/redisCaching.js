@@ -1,6 +1,7 @@
 const redis = require("../config/redis");
 
 async function setProjectByApiKeyCache(api, project) {
+    if (redis.status !== "ready") return;
     try {
         const data = JSON.stringify(project);
         await redis.set(
@@ -15,6 +16,7 @@ async function setProjectByApiKeyCache(api, project) {
 }
 
 async function getProjectByApiKeyCache(api) {
+    if (redis.status !== "ready") return null;
     try {
         const data = await redis.get(`project:apikey:${api}`);
         if (!data) return null;
@@ -28,6 +30,7 @@ async function getProjectByApiKeyCache(api) {
 }
 
 async function deleteProjectByApiKeyCache(api) {
+    if (redis.status !== "ready") return;
     try {
         await redis.del(`project:apikey:${api}`);
     } catch (err) {
@@ -37,6 +40,7 @@ async function deleteProjectByApiKeyCache(api) {
 
 
 async function setProjectById(id, project) {
+    if (redis.status !== "ready") return;
     try {
         const data = JSON.stringify(project);
         await redis.set(
@@ -52,6 +56,7 @@ async function setProjectById(id, project) {
 
 
 async function getProjectById(id) {
+    if (redis.status !== "ready") return null;
     try {
         const data = await redis.get(`project:id:${id}`);
         if (!data) return null;
@@ -65,6 +70,7 @@ async function getProjectById(id) {
 
 
 async function deleteProjectById(id) {
+    if (redis.status !== "ready") return;
     try {
         await redis.del(`project:id:${id}`);
     } catch (err) {

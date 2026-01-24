@@ -6,7 +6,7 @@ function ConfirmationModal({ open, title, message, onConfirm, onCancel }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1050]"
       onClick={onCancel}
     >
       <div
