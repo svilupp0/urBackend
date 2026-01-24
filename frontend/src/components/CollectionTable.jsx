@@ -11,7 +11,6 @@ import {
     PointerSensor,
     useSensor,
     useSensors,
-    DragOverlay,
 } from '@dnd-kit/core';
 import {
     arrayMove,
@@ -191,7 +190,7 @@ export default function CollectionTable({ data, activeCollection, onDelete, onVi
         } else {
             setColumnOrder(columns.map(c => c.id));
         }
-    }, [activeCollection, columns]); // Re-run when collection changes (or columns def changes)
+    }, [activeCollection, columns, storageKey]); // Re-run when collection changes (or columns def changes)
 
     // 3. Persist State Changes
     useEffect(() => {
@@ -215,6 +214,7 @@ export default function CollectionTable({ data, activeCollection, onDelete, onVi
     );
 
     // 5. Table Instance
+    // eslint-disable-next-line
     const table = useReactTable({
         data,
         columns,

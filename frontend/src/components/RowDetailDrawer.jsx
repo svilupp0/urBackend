@@ -16,7 +16,7 @@ export default function RowDetailDrawer({ isOpen, onClose, record, fields }) {
         }
     };
 
-    const renderValue = (value, type) => {
+    const renderValue = (value) => {
         if (value === null || value === undefined) return <span className="text-muted italic">Empty</span>;
 
         if (typeof value === "boolean") {
@@ -68,7 +68,7 @@ export default function RowDetailDrawer({ isOpen, onClose, record, fields }) {
                                     <span className="type-badge">{field.type}</span>
                                 </div>
                                 <div className="field-value">
-                                    {renderValue(record[field.key], field.type)}
+                                    {renderValue(record[field.key])}
                                 </div>
                             </div>
                         ))}

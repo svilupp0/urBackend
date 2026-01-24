@@ -1,7 +1,7 @@
 import React from "react";
 import { List, MoreHorizontal, Calendar, ArrowRight } from "lucide-react";
 
-export default function RecordList({ data, activeCollection, onView, onDelete }) {
+export default function RecordList({ data, activeCollection, onView }) {
     // Helper to get important fields (skip _id and system fields)
     const getPreviewFields = (record) => {
         if (!activeCollection?.model) return [];

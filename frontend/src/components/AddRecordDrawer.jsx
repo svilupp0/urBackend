@@ -28,7 +28,7 @@ export default function AddRecordDrawer({
       setFormData({});
       setErrors({});
     }
-  }, [isOpen, fields]);
+  }, [isOpen, fields, setFormData, setErrors]);
 
   // Handle outside click to close
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function AddRecordDrawer({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleChange = (key, value, type) => {
+  const handleChange = (key, value) => {
     let finalValue = value;
 
     // Basic type conversion

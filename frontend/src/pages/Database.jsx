@@ -12,14 +12,11 @@ import RecordList from "../components/RecordList";
 import {
   Database as DbIcon,
   Plus,
-  Trash2,
   RefreshCw,
   Code,
   Table as TableIcon,
   List as ListIcon,
-  Search,
   Menu,
-  MoreVertical,
   FileText,
 } from "lucide-react";
 
