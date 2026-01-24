@@ -160,18 +160,6 @@ export default function Database() {
         onDelete={fetchShowModal}
         onView={setSelectedRecord}
       />
-      {showModal && (
-        <ConfirmationModal
-          open={showModal}
-          title="Delete Record"
-          message="Are you sure you want to delete this record? This action cannot be undone."
-          onConfirm={() => {
-            handleDelete(selectedId);
-            setShowModal(false);
-          }}
-          onCancel={() => setShowModal(false)}
-        />
-      )}
     </div>
   );
 
@@ -219,6 +207,19 @@ export default function Database() {
         record={selectedRecord}
         fields={activeCollection?.model || []}
       />
+
+      {showModal && (
+        <ConfirmationModal
+          open={showModal}
+          title="Delete Record"
+          message="Are you sure you want to delete this record? This action cannot be undone."
+          onConfirm={() => {
+            handleDelete(selectedId);
+            setShowModal(false);
+          }}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
 
       <main className="db-main">
         {activeCollection ? (
@@ -313,7 +314,6 @@ export default function Database() {
                   data={data}
                   activeCollection={activeCollection}
                   onView={setSelectedRecord}
-                  onDelete={fetchShowModal}
                 />
               ) : viewMode === "table" ? (
                 <TableView />

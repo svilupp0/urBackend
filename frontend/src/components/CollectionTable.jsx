@@ -157,7 +157,7 @@ export default function CollectionTable({ data, activeCollection, onDelete, onVi
                 ),
             },
         ];
-    }, [activeCollection, onDelete]);
+    }, [activeCollection, onDelete, onView]);
 
     // 2. Load Persisted State
     const storageKey = `table-settings-${activeCollection?._id}`;

@@ -3,7 +3,9 @@ const dotenv = require("dotenv");
 dotenv.config()
 
 if (!process.env.REDIS_URL) {
-    console.log("DEBUG: ENV KEYS:", Object.keys(process.env));
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("DEBUG: ENV KEYS:", Object.keys(process.env));
+    }
     throw new Error("REDIS_URL is not defined in .env");
 }
 
