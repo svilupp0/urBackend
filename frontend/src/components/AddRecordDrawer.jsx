@@ -22,13 +22,7 @@ export default function AddRecordDrawer({
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
 
-  // Reset form when drawer opens/closes or fields change
-  useEffect(() => {
-    if (isOpen) {
-      setFormData({});
-      setErrors({});
-    }
-  }, [isOpen, fields, setFormData, setErrors]);
+
 
   // Handle outside click to close
   useEffect(() => {

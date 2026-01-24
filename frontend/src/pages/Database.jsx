@@ -339,13 +339,16 @@ export default function Database() {
       </main>
 
       {/* Add Record Drawer */}
-      <AddRecordDrawer
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleAddDocument}
-        fields={activeCollection?.model || []}
-        isSubmitting={isSubmitting}
-      />
+      {isAddModalOpen && (
+        <AddRecordDrawer
+          key={activeCollection?._id}
+          isOpen={true}
+          onClose={() => setIsAddModalOpen(false)}
+          onSubmit={handleAddDocument}
+          fields={activeCollection?.model || []}
+          isSubmitting={isSubmitting}
+        />
+      )}
 
       <style>{`
                 /* Component Specific Styles */
