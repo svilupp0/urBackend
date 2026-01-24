@@ -11,6 +11,7 @@ const {
     getSingleProject,
     regenerateApiKey,
     createCollection,
+    deleteCollection,
     getData,
     deleteRow,
     insertData,
@@ -42,6 +43,9 @@ router.patch('/:projectId/regenerate-key', authMiddleware, regenerateApiKey);
 
 // CREATE COLLECTION (Fixed Validation)
 router.post('/collection', authMiddleware, verifyEmail, createCollection);
+
+// DELETE COLLECTION
+router.delete('/:projectId/collections/:collectionName', authMiddleware, verifyEmail, deleteCollection);
 
 // INTERNAL DATA ROUTES
 

@@ -208,13 +208,48 @@ module.exports.createCollection = async (req, res) => {
     }
 }
 
+module.exports.deleteCollection = async (req, res) => {
+    try {
+        const { projectId, collectionName } = req.params;
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
+
+        const collectionIndex = project.collections.findIndex(c => c.name === collectionName);
+        if (collectionIndex === -1) {
+            return res.status(404).json({ error: "Collection not found." });
+        }
+
+        const isExternal = project.resources?.db?.isExternal;
+
+        const connection = await getConnection(projectId);
+
+        const finalCollectionName = isExternal ? collectionName : `${project._id}_${collectionName}`;
+
+        try {
+            await connection.db.dropCollection(finalCollectionName);
+        } catch (e) {
+            console.warn(`Failed to drop collection ${finalCollectionName} (might not exist):`, e.message);
+        }
+
+        project.collections.splice(collectionIndex, 1);
+        await project.save();
+
+        await deleteProjectById(projectId);
+        await setProjectById(projectId, project);
+
+        res.json({ message: `Collection '${collectionName}' deleted successfully.` });
+    } catch (err) {
+        console.error("Delete Collection Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+}
+
 module.exports.getData = async (req, res) => {
     try {
         const { projectId, collectionName } = req.params;
         const project = await Project.findOne({ _id: projectId, owner: req.user._id });
         if (!project) return res.status(404).json({ error: "Project not found." });
-
-        // const finalCollectionName = `${project._id}_${collectionName}`;
 
         const collectionConfig = project.collections.find(c => c.name === collectionName);
         if (!collectionConfig) {

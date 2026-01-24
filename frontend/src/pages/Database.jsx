@@ -41,12 +41,40 @@ export default function Database() {
   const [newData, setNewData] = useState({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   //used showModal to open the Confirmation model
+  //used showModal to open the Confirmation model
   const [showModal, setShowModal] = useState(false);
   //keeping track of the selected record in the collection
   const [selectedId, setSelectedId] = useState(null);
+  const [collectionToDelete, setCollectionToDelete] = useState(null);
+
   const fetchShowModal = (id) => {
     setShowModal(true);
     setSelectedId(id);
+  };
+
+  const handleDeleteCollection = async (collectionName) => {
+    try {
+      await axios.delete(
+        `${API_URL}/api/projects/${projectId}/collections/${collectionName}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const updatedCollections = collections.filter(c => c.name !== collectionName);
+      setCollections(updatedCollections);
+
+      if (activeCollection?.name === collectionName) {
+        setActiveCollection(updatedCollections.length > 0 ? updatedCollections[0] : null);
+        if (updatedCollections.length === 0) {
+          setSearchParams({});
+        }
+      }
+      toast.success("Collection deleted successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to delete collection");
+    }
   };
   // Fetch Project & Collections
   useEffect(() => {
@@ -235,22 +263,49 @@ export default function Database() {
               className={`collection-item ${activeCollection?._id === c._id ? "active" : ""
                 }`}
             >
-              <DbIcon size={16} className="col-icon" />
-              <span className="col-name">{c.name}</span>
-              {activeCollection?._id === c._id && (
-                <ChevronRight size={14} className="active-indicator" />
-              )}
+              <div className="flex items-center gap-3 overflow-hidden">
+                <DbIcon size={16} className="col-icon shrink-0" />
+                <span className="col-name truncate">{c.name}</span>
+              </div>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  className="btn-icon p-1 hover:bg-red-500/20 text-muted hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCollectionToDelete(c);
+                  }}
+                  title="Delete Collection"
+                >
+                  <Trash2 size={14} />
+                </button>
+                {activeCollection?._id === c._id && (
+                  <ChevronRight size={14} className="active-indicator shrink-0" />
+                )}
+              </div>
             </div>
           ))
         )}
       </div>
+
+      {collectionToDelete && (
+        <ConfirmationModal
+          open={!!collectionToDelete}
+          title="Delete Collection"
+          message={`Are you sure you want to delete collection "${collectionToDelete.name}"? This will delete all ${collectionToDelete.docs || 'associated'} documents permanentyl.`}
+          onConfirm={() => {
+            handleDeleteCollection(collectionToDelete.name);
+            setCollectionToDelete(null);
+          }}
+          onCancel={() => setCollectionToDelete(null)}
+        />
+      )}
 
       <div className="sidebar-footer">
         <div className="project-info">
           <div className="dot"></div> {project?.name || "Project"}
         </div>
       </div>
-    </aside>
+    </aside >
   );
 
   /* Column Resizer Component */
@@ -632,17 +687,31 @@ export default function Database() {
                 }
 
                 .collection-item {
-                    padding: 10px 12px;
+                    padding: 8px 12px;
                     margin-bottom: 4px;
                     border-radius: 6px;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
-                    gap: 12px;
+                    justify-content: space-between;
                     color: var(--color-text-muted);
                     transition: all 0.2s;
                     border: 1px solid transparent;
                 }
+                
+                .collection-item:hover .btn-icon {
+                    opacity: 1;
+                }
+                
+                .flex { display: flex; }
+                .items-center { align-items: center; }
+                .gap-3 { gap: 0.75rem; }
+                .gap-2 { gap: 0.5rem; }
+                .ml-auto { margin-left: auto; }
+                .shrink-0 { flex-shrink: 0; }
+                .overflow-hidden { overflow: hidden; }
+                .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 
                 .collection-item:hover {
                     background: rgba(255,255,255,0.03);
