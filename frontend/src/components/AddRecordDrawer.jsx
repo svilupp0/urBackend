@@ -20,17 +20,8 @@ export default function AddRecordDrawer({
   isSubmitting = false,
   initialData = null,
 }) {
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(initialData || {});
   const [errors, setErrors] = useState({});
-
-  useEffect(() => {
-    if (isOpen) {
-      setFormData(initialData || {});
-      setErrors({});
-    }
-  }, [isOpen, initialData]);
-
-
 
   // Handle outside click to close
   useEffect(() => {
