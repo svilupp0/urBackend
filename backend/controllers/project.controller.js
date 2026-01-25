@@ -356,6 +356,56 @@ module.exports.deleteRow = async (req, res) => {
     }
 };
 
+module.exports.editRow = async (req, res) => {
+    try {
+        const { projectId, collectionName, id } = req.params;
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).json({ error: "Project not found." });
+
+        const collectionConfig = project.collections.find(c => c.name === collectionName);
+        if (!collectionConfig) {
+            return res.status(404).json({ error: "Collection not found." });
+        }
+
+        const connection = await getConnection(projectId);
+        const Model = getCompiledModel(connection, collectionConfig, projectId, project.resources.db.isExternal);
+
+        const docToEdit = await Model.findById(id);
+        if (!docToEdit) {
+            return res.status(404).json({ error: "Document not found." });
+        }
+
+        const oldSize = Buffer.byteLength(JSON.stringify(docToEdit.toObject()));
+
+        // Apply updates
+        docToEdit.set(req.body);
+
+        const newSize = Buffer.byteLength(JSON.stringify(docToEdit.toObject()));
+        const sizeDiff = newSize - oldSize;
+
+        if (!project.resources.db.isExternal) {
+            const limit = project.databaseLimit || 500 * 1024 * 1024; // Default 500MB if not set
+            const currentUsed = project.databaseUsed || 0;
+
+            if (currentUsed + sizeDiff > limit) {
+                return res.status(403).json({ error: "Database limit exceeded." });
+            }
+
+            project.databaseUsed = Math.max(0, currentUsed + sizeDiff);
+            await project.save();
+        }
+
+        const updatedDoc = await docToEdit.save();
+
+        res.json({ success: true, message: "Document edited successfully", data: updatedDoc });
+
+    } catch (err) {
+        console.error("Edit Error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports.listFiles = async (req, res) => {
     try {
         const { projectId } = req.params;

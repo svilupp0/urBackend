@@ -44,6 +44,7 @@ export default function Database() {
   const [selectedId, setSelectedId] = useState(null);
   const [collectionToDelete, setCollectionToDelete] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null); // For detail drawer
+  const [editingRecord, setEditingRecord] = useState(null);
 
   const fetchShowModal = (id) => {
     setShowModal(true);
@@ -169,6 +170,36 @@ export default function Database() {
   };
 
 
+  const handleEditRow = (record) => {
+    setEditingRecord(record);
+    setIsAddModalOpen(true);
+  };
+
+  const handleUpdateDocument = async (submittedData) => {
+    setIsSubmitting(true);
+    try {
+      const id = editingRecord._id;
+      const res = await axios.patch(
+        `${API_URL}/api/projects/${projectId}/collections/${activeCollection.name}/data/${id}`,
+        submittedData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success("Document updated successfully");
+      setIsAddModalOpen(false);
+      setEditingRecord(null);
+      // Update local state
+      setData((prev) => prev.map((item) => (item._id === id ? res.data.data : item)));
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to update data");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
   // --- SUB-COMPONENTS --- //
 
@@ -179,6 +210,7 @@ export default function Database() {
         activeCollection={activeCollection}
         onDelete={fetchShowModal}
         onView={setSelectedRecord}
+        onEdit={handleEditRow}
       />
     </div>
   );
@@ -375,15 +407,18 @@ export default function Database() {
         )}
       </main>
 
-      {/* Add Record Drawer */}
       {isAddModalOpen && (
         <AddRecordDrawer
           key={activeCollection?._id}
           isOpen={true}
-          onClose={() => setIsAddModalOpen(false)}
-          onSubmit={handleAddDocument}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingRecord(null);
+          }}
+          onSubmit={editingRecord ? handleUpdateDocument : handleAddDocument}
           fields={activeCollection?.model || []}
           isSubmitting={isSubmitting}
+          initialData={editingRecord}
         />
       )}
 

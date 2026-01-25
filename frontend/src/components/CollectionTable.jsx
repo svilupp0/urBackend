@@ -19,7 +19,7 @@ import {
     useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Trash2, Settings2, Check, GripVertical, Eye } from "lucide-react";
+import { Trash2, Settings2, Check, GripVertical, Eye, Pencil } from "lucide-react";
 
 /* Resizer Component - kept simple */
 const Resizer = ({ header }) => {
@@ -74,7 +74,7 @@ const DraggableColumnHeader = ({ header, children, style: propStyle, className }
     );
 };
 
-export default function CollectionTable({ data, activeCollection, onDelete, onView }) {
+export default function CollectionTable({ data, activeCollection, onDelete, onView, onEdit }) {
     // 1. Column Definitions
     const columns = useMemo(() => {
         if (!activeCollection?.model) return [];
@@ -143,6 +143,14 @@ export default function CollectionTable({ data, activeCollection, onDelete, onVi
                             title="View Details"
                         >
                             <Eye size={15} />
+                        </button>
+                        <button
+                            className="btn-icon"
+                            onClick={() => onEdit(info.row.original)}
+                            onPointerDown={e => e.stopPropagation()}
+                            title="Edit"
+                        >
+                            <Pencil size={15} />
                         </button>
                         <button
                             className="btn-icon danger-hover"

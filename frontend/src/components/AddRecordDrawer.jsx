@@ -18,9 +18,17 @@ export default function AddRecordDrawer({
   onSubmit,
   fields = [],
   isSubmitting = false,
+  initialData = null,
 }) {
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialData || {});
+      setErrors({});
+    }
+  }, [isOpen, initialData]);
 
 
 
@@ -150,9 +158,9 @@ export default function AddRecordDrawer({
           alignItems: "center"
         }}>
           <div>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Add New Record</h2>
+            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>{initialData ? "Edit Record" : "Add New Record"}</h2>
             <p style={{ fontSize: "0.85rem", color: "var(--color-text-muted)", margin: "4px 0 0 0" }}>
-              Fill in the details for the new document.
+              {initialData ? "Update the details for this document." : "Fill in the details for the new document."}
             </p>
           </div>
           <button
@@ -254,7 +262,7 @@ export default function AddRecordDrawer({
             ) : (
               <>
                 <Check size={18} />
-                <span>Save Record</span>
+                <span>{initialData ? "Update" : "Save Record"}</span>
               </>
             )}
           </button>
