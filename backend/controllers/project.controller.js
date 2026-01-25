@@ -229,7 +229,7 @@ module.exports.deleteCollection = async (req, res) => {
         try {
             await connection.db.dropCollection(finalCollectionName);
         } catch (e) {
-            console.warn(`Failed to drop collection ${finalCollectionName} (might not exist):`, e.message);
+            console.warn("Failed to drop collection (might not exist):", finalCollectionName, e.message);
         }
 
         project.collections.splice(collectionIndex, 1);
