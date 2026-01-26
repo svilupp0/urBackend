@@ -323,7 +323,7 @@ function DatabaseConfigForm({ project, projectId, token, onProjectUpdate }) {
         const res = await axios.get(`${API_URL}/api/server-ip`);
         setServerIp(res.data.ip);
       } catch (e) {
-        console.error("Failed to fetch server IP");
+        console.error("Failed to fetch server IP", e);
       }
     };
     fetchIp();
