@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
-import { Trash2, AlertTriangle, Save, CheckCircle } from "lucide-react";
+import { Trash2, AlertTriangle, Save, CheckCircle, Copy, Server } from "lucide-react";
 import { API_URL } from "../config";
 import ConfirmationModal from "./ConfirmationModal";
 
@@ -308,10 +308,30 @@ function DatabaseConfigForm({ project, projectId, token }) {
   const isConfigured = project?.resources?.db?.isExternal || false;
   const [showForm, setShowForm] = useState(!isConfigured);
 
+  const [serverIp, setServerIp] = useState(null);
+
   useEffect(() => {
     const configured = project?.resources?.db?.isExternal || false;
     setShowForm(!configured);
+
+    // Fetch Server IP
+    const fetchIp = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/server-ip`);
+        setServerIp(res.data.ip);
+      } catch (e) {
+        console.error("Failed to fetch server IP");
+      }
+    };
+    fetchIp();
   }, [project]);
+
+  const copyIp = () => {
+    if (serverIp) {
+      navigator.clipboard.writeText(serverIp);
+      toast.success("Server IP copied!");
+    }
+  };
 
   const handleUpdate = async () => {
     if (!dbUri) return toast.error("Database URI is required");
@@ -329,7 +349,20 @@ function DatabaseConfigForm({ project, projectId, token }) {
       // Typically we'd reload project data here, but for now we rely on user refresh or optimistic ui if needed
       // Ideally notify parent to refresh project, but basic flow:
     } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to update DB config");
+      const errorMsg = err.response?.data?.error || "Failed to update DB config";
+
+      if (errorMsg.includes("whitelist Server IP")) {
+        toast.error(
+          <div>
+            <b>Access Denied!</b>
+            <br />
+            {errorMsg}
+          </div>,
+          { duration: 6000 }
+        );
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -439,26 +472,45 @@ function DatabaseConfigForm({ project, projectId, token }) {
           <div
             style={{
               display: "flex",
-              justifyContent: "flex-end",
-              gap: "12px",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginTop: "1rem",
+              paddingTop: "1rem",
+              borderTop: "1px solid var(--color-border)",
             }}
           >
-            {isConfigured && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+              <Server size={14} />
+              <span>Server Public IP: <code style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{serverIp || "Loading..."}</code></span>
+              {serverIp && (
+                <button
+                  onClick={copyIp}
+                  className="btn-icon"
+                  title="Copy IP"
+                  style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--color-primary)', padding: 0, marginLeft: '5px' }}
+                >
+                  <Copy size={14} />
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {isConfigured && (
+                <button
+                  className="btn btn-ghost"
+                  onClick={() => setShowForm(false)}
+                >
+                  Cancel
+                </button>
+              )}
               <button
-                className="btn btn-ghost"
-                onClick={() => setShowForm(false)}
+                onClick={handleUpdate}
+                className="btn btn-primary"
+                disabled={loading}
               >
-                Cancel
+                {loading ? "Saving..." : "Connect Database"}
               </button>
-            )}
-            <button
-              onClick={handleUpdate}
-              className="btn btn-primary"
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Connect Database"}
-            </button>
+            </div>
           </div>
         </div>
       )}

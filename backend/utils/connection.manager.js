@@ -1,4 +1,5 @@
 const { registry } = require("./registry");
+const { getPublicIp } = require("./network");
 const Project = require("../models/Project");
 const { decrypt } = require("./encryption");
 const mongoose = require("mongoose");
@@ -39,9 +40,20 @@ async function getConnection(projectId) {
         console.log(`✅ External DB connected: ${projectId}`);
     });
 
+    try {
+        await connection.asPromise();
+    } catch (err) {
+        console.error("❌ Initial Connection Failed:", err.message);
+        if (err.message.includes("Server selection timed out") || err.message.includes("Could not connect")) {
+            const serverIp = await getPublicIp();
+            throw new Error(`Access Denied: Please whitelist Server IP [${serverIp}] in MongoDB Atlas.`);
+        }
+        throw err;
+    }
+
     connection.on("error", (err) => {
         console.error("❌ Connection error [%s]:", projectId, err);
-        registry.delete(key); 
+        registry.delete(key);
     });
 
     connection.on("close", () => {

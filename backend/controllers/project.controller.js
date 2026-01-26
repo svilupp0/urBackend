@@ -12,6 +12,7 @@ const { getConnection } = require("../utils/connection.manager");
 const { getCompiledModel } = require("../utils/injectModel")
 const { storageRegistry } = require("../utils/registry");
 const { deleteProjectByApiKeyCache, setProjectById, getProjectById, deleteProjectById } = require("../services/redisCaching");
+const { getPublicIp } = require("../utils/network");
 
 
 
@@ -143,6 +144,27 @@ module.exports.updateExternalConfig = async (req, res) => {
             // Naye model structure ke hisaab se save karein
             updateData['resources.db.config'] = encrypt(JSON.stringify({ dbUri }));
             updateData['resources.db.isExternal'] = true;
+
+            // --- VERIFY CONNECTION ---
+            console.log("Verifying connection to:", projectId);
+            try {
+                const tempConn = mongoose.createConnection(dbUri, { serverSelectionTimeoutMS: 5000 });
+                await tempConn.asPromise();
+                await tempConn.close();
+            } catch (connErr) {
+                console.error("Verification Connection Failed:", connErr.message);
+                let errorMsg = "Could not connect to the provided MongoDB URI.";
+
+                if (connErr.message.includes("Server selection timed out") || connErr.message.includes("Could not connect")) {
+                    const serverIp = await getPublicIp();
+                    errorMsg = `Access Denied: Please whitelist Server IP [${serverIp}] in MongoDB Atlas.`;
+                } else {
+                    errorMsg += " " + connErr.message;
+                }
+
+                return res.status(400).json({ error: errorMsg });
+            }
+            // -------------------------
         }
 
         // 3. Storage Config Encryption

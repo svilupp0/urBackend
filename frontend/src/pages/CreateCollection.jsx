@@ -14,7 +14,9 @@ function CreateCollection() {
 
     const [name, setName] = useState('');
     const [fields, setFields] = useState([
-        { key: 'id', type: 'String', required: true } // Default ID field suggestion
+        { key: 'username', type: 'String', required: true },
+        { key: 'email', type: 'String', required: true },
+        { key: 'password', type: 'String', required: true },
     ]);
     const [loading, setLoading] = useState(false);
 

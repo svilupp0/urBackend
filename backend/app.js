@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 app.set('trust proxy', 1);
 const GC = require('./utils/GC');
+const { getPublicIp } = require('./utils/network');
 
 // Middleware
 app.use(cors());
@@ -64,7 +65,13 @@ app.use('/api/auth', dashboardLimiter, authRoute); // Developer Auth
 app.use('/api/projects', dashboardLimiter, projectRoute); // Project Mgmt
 app.use('/api/userAuth', limiter, logger, userAuthRoute);
 app.use('/api/data', limiter, cors(adminCorsOptions), logger, dataRoute);
+app.use('/api/data', limiter, cors(adminCorsOptions), logger, dataRoute);
 app.use('/api/storage', limiter, cors(adminCorsOptions), logger, storageRoute);
+
+app.get('/api/server-ip', async (req, res) => {
+    const ip = await getPublicIp();
+    res.json({ ip });
+});
 
 // Test Route
 app.get('/', (req, res) => {
