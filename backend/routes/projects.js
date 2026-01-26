@@ -23,6 +23,8 @@ const {
     deleteProject,
     updateProject,
     updateExternalConfig,
+    deleteExternalDbConfig,
+    deleteExternalStorageConfig,
     analytics
 } = require("../controllers/project.controller")
 
@@ -76,6 +78,12 @@ router.patch('/:projectId', authMiddleware, updateProject);
 
 // UPDATE EXTERNAL CONFIG
 router.patch('/:projectId/byod-config', authMiddleware, updateExternalConfig);
+
+// DELETE EXTERNAL DB CONFIG
+router.delete('/:projectId/byod-config/db', authMiddleware, deleteExternalDbConfig);
+
+// DELETE EXTERNAL SUPABASE CONFIG
+router.delete('/:projectId/byod-config/storage', authMiddleware, deleteExternalStorageConfig);
 
 // INSERT DATA (Dashboard)
 router.post('/:projectId/collections/:collectionName/data', authMiddleware, verifyEmail, insertData);

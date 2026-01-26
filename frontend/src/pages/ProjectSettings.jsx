@@ -188,11 +188,13 @@ export default function ProjectSettings() {
           project={project}
           projectId={projectId}
           token={token}
+          onProjectUpdate={setProject}
         />
         <StorageConfigForm
           project={project}
           projectId={projectId}
           token={token}
+          onProjectUpdate={setProject}
         />
       </div>
 
@@ -301,12 +303,13 @@ export default function ProjectSettings() {
   );
 }
 
-function DatabaseConfigForm({ project, projectId, token }) {
+function DatabaseConfigForm({ project, projectId, token, onProjectUpdate }) {
   const [dbUri, setDbUri] = useState("");
   const [loading, setLoading] = useState(false);
   // Use optional chaining carefully - project might be null initially
   const isConfigured = project?.resources?.db?.isExternal || false;
   const [showForm, setShowForm] = useState(!isConfigured);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
 
   const [serverIp, setServerIp] = useState(null);
 
@@ -368,8 +371,53 @@ function DatabaseConfigForm({ project, projectId, token }) {
     }
   };
 
+  const handleRemove = async () => {
+    // Replaced window.confirm with modal state trigger
+    setShowRemoveModal(true);
+  };
+
+  const executeRemove = async () => {
+    try {
+      await axios.delete(
+        `${API_URL}/api/projects/${projectId}/byod-config/db`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { projectId }
+        }
+      );
+      toast.success("External database configuration removed!");
+
+      onProjectUpdate(prev => ({
+        ...prev,
+        resources: {
+          ...prev.resources,
+          db: { ...prev.resources.db, isExternal: false }
+        }
+      }));
+      setShowForm(true);
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to remove DB config");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="card" style={{ position: "relative", overflow: "hidden" }}>
+      {showRemoveModal && (
+        <ConfirmationModal
+          open={showRemoveModal}
+          title="Remove Database Config"
+          message="Are you sure you want to remove the external database configuration? This will switch back to the internal database."
+          onConfirm={() => {
+            executeRemove();
+            setShowRemoveModal(false);
+          }}
+          onCancel={() => setShowRemoveModal(false)}
+        />
+      )}
       <div
         style={{
           position: "absolute",
@@ -428,16 +476,30 @@ function DatabaseConfigForm({ project, projectId, token }) {
             <CheckCircle size={18} />
             Connected
           </div>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowForm(true)}
-            style={{
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-main)",
-            }}
-          >
-            Update URI
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowForm(true)}
+              style={{
+                borderColor: "var(--color-border)",
+                color: "var(--color-text-main)",
+              }}
+            >
+              Update URI
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={handleRemove}
+              disabled={loading}
+              style={{
+                background: 'rgba(234, 84, 85, 0.1)',
+                color: '#ea5455',
+                border: '1px solid rgba(234, 84, 85, 0.2)'
+              }}
+            >
+              {loading ? "Removing..." : "Remove Config"}
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ marginTop: "1rem" }}>
@@ -518,7 +580,7 @@ function DatabaseConfigForm({ project, projectId, token }) {
   );
 }
 
-function StorageConfigForm({ project, projectId, token }) {
+function StorageConfigForm({ project, projectId, token, onProjectUpdate }) {
   const [config, setConfig] = useState({
     storageUrl: "",
     storageKey: "",
@@ -527,6 +589,7 @@ function StorageConfigForm({ project, projectId, token }) {
   const [loading, setLoading] = useState(false);
   const isConfigured = project?.resources?.storage?.isExternal || false;
   const [showForm, setShowForm] = useState(!isConfigured);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
 
   useEffect(() => {
     const configured = project?.resources?.storage?.isExternal || false;
@@ -563,8 +626,58 @@ function StorageConfigForm({ project, projectId, token }) {
     }
   };
 
+  const handleRemove = async () => {
+    // Replaced window.confirm with modal state trigger
+    setShowRemoveModal(true);
+  };
+
+  const executeRemove = async () => {
+    try {
+      await axios.delete(
+        `${API_URL}/api/projects/${projectId}/byod-config/storage`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          data: { projectId }
+        }
+      );
+      toast.success("External storage configuration removed!");
+
+      onProjectUpdate(prev => ({
+        ...prev,
+        resources: {
+          ...prev.resources,
+          storage: { ...prev.resources.storage, isExternal: false }
+        }
+      }));
+      setConfig({
+        storageUrl: "",
+        storageKey: "",
+        storageProvider: "supabase",
+      });
+      setShowForm(true);
+
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to remove Storage config");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="card" style={{ position: "relative", overflow: "hidden" }}>
+      {showRemoveModal && (
+        <ConfirmationModal
+          open={showRemoveModal}
+          title="Remove Storage Config"
+          message="Are you sure you want to remove the external storage configuration? This will switch back to the internal storage."
+          onConfirm={() => {
+            executeRemove();
+            setShowRemoveModal(false);
+          }}
+          onCancel={() => setShowRemoveModal(false)}
+        />
+      )}
       <div
         style={{
           position: "absolute",
@@ -622,16 +735,30 @@ function StorageConfigForm({ project, projectId, token }) {
             <CheckCircle size={18} />
             Connected
           </div>
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => setShowForm(true)}
-            style={{
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-main)",
-            }}
-          >
-            Update Config
-          </button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowForm(true)}
+              style={{
+                borderColor: "var(--color-border)",
+                color: "var(--color-text-main)",
+              }}
+            >
+              Update Config
+            </button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={handleRemove}
+              disabled={loading}
+              style={{
+                background: 'rgba(234, 84, 85, 0.1)',
+                color: '#ea5455',
+                border: '1px solid rgba(234, 84, 85, 0.2)'
+              }}
+            >
+              {loading ? "Removing..." : "Remove Config"}
+            </button>
+          </div>
         </div>
       ) : (
         <div style={{ marginTop: "1rem", display: "grid", gap: "1.5rem" }}>

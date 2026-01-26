@@ -200,6 +200,44 @@ module.exports.updateExternalConfig = async (req, res) => {
     }
 }
 
+module.exports.deleteExternalDbConfig = async (req, res) => {
+    try {
+        const { projectId } = req.body;
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
+
+        project.resources.db.isExternal = false;
+        project.resources.db.config = null;
+        await project.save();
+
+        res.status(200).json({ message: "External configuration deleted successfully." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports.deleteExternalStorageConfig = async (req, res) => {
+    try {
+        const { projectId } = req.body;
+
+        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        if (!project) return res.status(404).json({ error: "Project not found or access denied." });
+
+        project.resources.storage.isExternal = false;
+        project.resources.storage.config = null;
+
+        await deleteProjectById(projectId);
+        await setProjectById(projectId, project);
+        await project.save();
+
+        res.status(200).json({ message: "External configuration deleted successfully." });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+
 
 module.exports.createCollection = async (req, res) => {
     try {
