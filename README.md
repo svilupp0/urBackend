@@ -212,6 +212,8 @@ UrBackend is just getting started. Here’s what’s on the horizon:
 
 Want to see a feature? [Open an issue!](https://github.com/yash-pouranik/urbackend/issues)
 
+## Contributors
+
 <a href="https://github.com/yash-pouranik/urbackend/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=yash-pouranik/urbackend" />
 </a>
