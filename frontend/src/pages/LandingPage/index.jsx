@@ -145,7 +145,7 @@ function LandingPage() {
 
             <div className="hero-section">
                 <div className="hero-pill">
-                    <Zap size={14} fill="currentColor" /> Public Alpha v1.1
+                    <Zap size={14} fill="currentColor" /> Public Alpha v0.1.0
                 </div>
 
                 <h1 className="hero-heading">

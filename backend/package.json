@@ -1,6 +1,6 @@
 {
   "name": "urbackend",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "a web BAAS application",
   "main": "app.js",
   "scripts": {
