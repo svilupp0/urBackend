@@ -202,9 +202,12 @@ module.exports.updateExternalConfig = async (req, res) => {
 
 module.exports.deleteExternalDbConfig = async (req, res) => {
     try {
-        const { projectId } = req.body;
+        const parsedBody = z.object({
+            projectId: z.string(),
+        }).parse(req.body);
+        const { projectId } = parsedBody;
 
-        const project = await Project.findOne({ _id: projectId, owner: req.user._id });
+        const project = await Project.findOne({ _id: { $eq: projectId }, owner: req.user._id });
         if (!project) return res.status(404).json({ error: "Project not found or access denied." });
 
         project.resources.db.isExternal = false;
