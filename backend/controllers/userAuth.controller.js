@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { z } = require('zod');
 const mongoose = require('mongoose');
-const { loginSchema } = require('../utils/input.validation');
+const { loginSchema, signupSchema } = require('../utils/input.validation');
 
 module.exports.signup = async (req, res) => {
     try {
