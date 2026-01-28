@@ -9,7 +9,7 @@ module.exports.signup = async (req, res) => {
         const project = req.project;
 
         // Zod Validation (Prevents NoSQL Injection too)
-        const { email, password, ...otherData } = loginSchema.parse(req.body);
+        const { email, password, username, ...otherData } = signupSchema.parse(req.body);
 
         const collectionName = `${project._id}_users`;
         const collection = mongoose.connection.db.collection(collectionName);
